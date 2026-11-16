@@ -329,7 +329,7 @@ body.wide #title{font-size:30px;font-weight:600}
  button.icon{min-width:36px;padding:8px 6px}
  #status{font-size:11px;padding:0 4px;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
  #bar .sp{flex:1 1 0;min-width:0}
- #saveBtn{padding:8px 10px;flex:none}
+ #saveBtn{flex:none}
  #bar button.icon{min-width:31px;padding:8px 3px;flex:none}
  #bar button.icon .ico{width:19px;height:19px}
  #colorMenu{position:fixed;top:54px;left:8px;right:8px;width:auto}
@@ -361,7 +361,7 @@ body.wide #title{font-size:30px;font-weight:600}
  #editor td,#editor th{width:auto!important;min-width:0!important;overflow-wrap:anywhere;word-break:break-word;padding:5px 6px;font-size:15px}}
 @media (max-width:370px){
  #bar button.icon{min-width:29px;padding:8px 3px}
- #saveBtn{padding:8px 8px;font-size:15px}
+
  #status{display:none}
 }
 @media (max-width:350px){
@@ -435,8 +435,6 @@ body.wide #calView .calD button{aspect-ratio:auto;height:100%;font-size:clamp(11
  #calView .calD .w{font-size:13px}
  #calView .calD button{aspect-ratio:auto;height:100%;font-size:17px;border-radius:8px}
  body.calOn:not(.calYV) #scroll{scroll-snap-type:y proximity}
- #calView .calInfo:empty{display:none}
- #calView .calInfo{white-space:normal}
  /* visų metų vaizdas telefone: 2 stulpeliai, skaičiai be rėmelių */
  #calView.yv .calGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
  #calView.yv .calM{height:auto;padding:10px 8px;scroll-snap-align:none}
@@ -454,7 +452,9 @@ body.wide #calView .calD button{aspect-ratio:auto;height:100%;font-size:clamp(11
 @media (max-width:760px){
  body.calOn #scroll,body.calOn #noteGroupRow,body.calOn #calView .calTop{background:var(--bg)}
  #calShow{display:none!important}   /* telefone – akies ikona šalia kalendoriaus */
- #calView{padding-top:0}   /* juosta visada tiesiai po paieška (mėnuo ir metai vienodai) */
+ #calView{padding:0 6px 120px}   /* juosta tiesiai po paieška; mėnesio ir metų šoniniai tarpai vienodi */
+ #calView .calTop{margin:0 -6px 6px;padding:8px 6px}
+ #calView .calInfo,#calView .calInfo:empty{display:block;min-height:1.4em;line-height:1.4em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}   /* eilutė visada vienoda – niekas nejuda */
  /* mėnuo */
  #calView.mv .calM{background:none;border:none;box-shadow:none;padding:4px 0 0}
  #calView.mv .calM h4{font-size:18px;font-weight:700;margin:0 4px 8px}
@@ -475,8 +475,6 @@ body.wide #calView .calD button{aspect-ratio:auto;height:100%;font-size:clamp(11
  /* metai */
  /* metai – matmenys pagal pavyzdį (telefono taškais) */
  /* tikslios pavyzdžio reikšmės (≤420px): .year-grid, .ym, .ym-h, .ym-dow, .yd */
- #calView.yv{padding-left:6px;padding-right:6px}
- #calView.yv .calTop{margin:0 -6px 6px;padding:8px 6px}
  #calView.yv .calGrid{gap:6px}
  #calView.yv .calM{background:var(--panel);border:none;box-shadow:none;border-radius:12px;padding:6px 3px 4px}
  #calView.yv .calM h4{font-size:.9rem;font-weight:650;line-height:normal;margin:0;padding:2px 4px 6px;letter-spacing:0}
@@ -502,6 +500,11 @@ body.wide #calView .calD button{aspect-ratio:auto;height:100%;font-size:clamp(11
 body.wide #calView{padding-top:12px}
 body.wide #calView .calD button{font-size:var(--dfs,14px);line-height:1;padding:0;overflow:hidden}
 body.wide #calView .calD .w{line-height:1;padding:3px 0}
+
+/* Išsaugojimo ikona – tokio pat stiliaus kaip kitos; neišsaugota – akcento spalva su tašku */
+#saveBtn{position:relative}
+#saveBtn.dirty{color:var(--text)}   /* ikona juodai balta, neišsaugota – raudonas taškas */
+#saveBtn.dirty::after{content:'';position:absolute;top:5px;right:2px;width:7px;height:7px;border-radius:50%;background:var(--danger)}
 </style>
 </head>
 <body>
@@ -665,7 +668,7 @@ body.wide #calView .calD .w{line-height:1;padding:3px 0}
    <button class="icon ed" id="delBtn" title="Ištrinti užrašą"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
    <span class="sp"></span>
    <span id="status"></span>
-   <button class="primary" id="saveBtn">Išsaugoti</button>
+   <button class="icon" id="saveBtn" title="Išsaugoti (Ctrl+S)" aria-label="Išsaugoti"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/></svg></button>
    <span class="menuwrap">
     <button class="icon" id="gearBtn" title="Nustatymai" aria-haspopup="true"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
     <div id="gearMenu" class="hidden" role="menu">
@@ -713,7 +716,7 @@ body.wide #calView .calD .w{line-height:1;padding:3px 0}
 var TEMPLATE='<!doctype html>\n'+document.documentElement.outerHTML;
 var OPEN='<'+'script id="store" type="application/json">';
 var CLOSE='</'+'script>';
-var VERSION='139';
+var VERSION='143';
 var ITER=310000;
 var PW_MASK=!matchMedia('(pointer:coarse)').matches;   // kompiuteryje slaptažodis vedamas į savą laukelį (ne <input>) – naršyklės jo nesiūlo išsaugoti
 var enc=new TextEncoder(),dec=new TextDecoder();
@@ -2953,7 +2956,8 @@ function setStatus(t,isDirty){var s=$('status');s.textContent=t;s.classList.togg
 function savedTxt(){return (data&&data.savedAt)?fmt(data.savedAt):'';}
 function showSaved(){
  var t=savedTxt();
- $('saveBtn').title=t?('Paskutinį kartą išsaugota: '+t):'Dar neišsaugota';
+ $('saveBtn').classList.toggle('dirty',!!dirty);
+ $('saveBtn').title=(dirty?'Išsaugoti (Ctrl+S) – yra neišsaugotų pakeitimų. ':'Išsaugoti (Ctrl+S). ')+(t?('Paskutinį kartą išsaugota: '+t):'Dar neišsaugota');
  if(dirty)setStatus('Neišsaugota'+(t?' · '+t:''),true);
  else setStatus(t?'Išsaugota '+t:'');
 }
