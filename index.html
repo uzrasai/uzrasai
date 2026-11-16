@@ -259,6 +259,8 @@ body.colresizing,body.colresizing *{cursor:col-resize!important;user-select:none
  #midTitle{font-size:19px}
  body.nav3 #sideTop{padding:4px 12px 10px}
  #notes li{padding:12px 12px}
+ #calView{padding:8px 12px 120px}
+ #calView .calTop{margin:0 -12px 10px;padding:8px 12px}
  #notes .th{width:60px;height:60px}
  body.nav3 #list li.grp,body.nav3 #list li.nall{padding-top:9px;padding-bottom:9px;font-size:16px}
  body.nav3.phone #list li.grp .gedit{opacity:.6}
@@ -364,6 +366,50 @@ body.wide #title{font-size:30px;font-weight:600}
  #bar button.icon{min-width:27px;padding:8px 2px}
  #bar button.icon .ico{width:18px;height:18px}
 }
+
+/* Savas lietuviškas kalendorius (naršyklės kalendorius rodomas naršyklės kalba) */
+#cardDlg .cdDateL{position:relative}
+#cdDate{cursor:pointer}
+#calPop{position:absolute;top:100%;left:0;z-index:5;margin-top:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:10px;width:280px;color:var(--text);font-size:14px}
+#calPop .ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+#calPop .ch b{font-size:15px;font-weight:600}
+#calPop button{min-height:0;border:none;border-radius:8px;padding:0;background:none;color:inherit;font:inherit}
+#calPop .nav{width:32px;height:32px;font-size:18px;color:var(--muted)}
+#calPop .nav:hover,#calPop .d:hover{background:var(--nav)}
+#calPop .g{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+#calPop .w{font-size:12px;color:var(--muted);padding:4px 0}
+#calPop .w.we,#calPop .d.we{color:#d6336c}
+#calPop .d{height:34px}
+#calPop .d.o{opacity:.35}
+#calPop .d.t{box-shadow:inset 0 0 0 1.5px var(--accent)}
+#calPop .d.s{background:var(--accent);color:#fff}
+#calPop .cf{display:flex;justify-content:space-between;margin-top:8px}
+#calPop .cf button{padding:6px 10px;color:var(--accent);font-weight:600}
+
+/* Kalendoriaus vaizdas */
+#calBtn{flex:none;width:38px;min-height:36px;padding:0;border-radius:8px;background:var(--bg);display:inline-flex;align-items:center;justify-content:center;color:var(--muted)}
+#calBtn .ico{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#calBtn:hover{color:var(--text)}
+#calBtn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+#calView{padding:12px 20px 120px}
+#calView .calTop{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 -20px 12px;padding:8px 20px;position:sticky;top:0;z-index:11;background:var(--panel)}
+#calView .calTop .yr{font-size:20px;font-weight:600;min-width:56px;text-align:center}
+#calView .calTop .nav{width:36px;min-height:36px;padding:0;font-size:18px;color:var(--muted)}
+#calView .calTop .sp{flex:1}
+#calView .calInfo{width:100%;font-size:14px;color:var(--muted);min-height:1.4em}
+#calView .calInfo b{color:var(--text);font-weight:600}
+#calView .calGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+#calView .calM{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.07);padding:10px 10px 12px}
+#calView .calM h4{margin:0 0 6px;font-size:14px;font-weight:700}
+#calView .calM h4 span{font-weight:400;color:var(--muted);font-size:12px}
+#calView .calD{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+#calView .calD .w{font-size:11px;color:var(--muted);text-align:center;padding-bottom:2px}
+#calView .calD button{aspect-ratio:1/.85;min-height:0;padding:0;border:1px solid var(--line);border-radius:6px;font-size:13px;background:var(--panel);color:var(--text)}
+#calView .calD button.we{color:var(--muted)}
+#calView .calD button.has{font-weight:700;color:#1d1d1f;border-color:rgba(0,0,0,.14)}
+#calView .calD button.t{box-shadow:inset 0 0 0 2px #6d5bd0}
+#calView .calD button.s{outline:3px solid var(--accent);outline-offset:1px;position:relative;z-index:1}
+#calView .calD button:hover{border-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -406,7 +452,7 @@ body.wide #title{font-size:30px;font-weight:600}
    <label>Indeksas<input id="cdIdx" autocomplete="off" spellcheck="false" maxlength="12" placeholder="pvz. V1"></label>
   </div>
   <div class="cd2">
-   <label>Data<input id="cdDate" type="date"></label>
+   <label class="cdDateL">Data<input id="cdDate" type="text" readonly placeholder="Pasirinkite datą" autocomplete="off"><div id="calPop" class="hidden"></div></label>
    <label>Kaina<input id="cdPrice" autocomplete="off" placeholder="pvz. €135"></label>
   </div>
   <label>Vieta <small>(koordinatės arba adresas)</small><input id="cdLoc" autocomplete="off" spellcheck="false" placeholder="27.2567961,-9.7808637"></label>
@@ -552,11 +598,12 @@ body.wide #title{font-size:30px;font-weight:600}
     <button data-op="delTable" class="tdel">Ištrinti lentelę</button>
   </div>
   <div id="scroll">
-   <div id="noteGroupRow"><span id="noteGroupLbl" class="hidden">Grupė: <select id="noteGroup"></select></span><span id="cardJumpLbl" class="hidden"><svg class="cjico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg><select id="cardJump" title="Šio užrašo kortelės pagal indeksą"></select></span></div>
+   <div id="noteGroupRow"><span id="noteGroupLbl" class="hidden">Grupė: <select id="noteGroup"></select></span><span id="cardJumpLbl" class="hidden"><svg class="cjico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg><select id="cardJump" title="Šio užrašo kortelės pagal indeksą"></select></span><button type="button" id="calBtn" title="Kalendorius: kortelės pagal datas"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg></button></div>
    <div id="doc">
     <textarea id="title" rows="1" placeholder="Pavadinimas" spellcheck="false" autocorrect="off"></textarea>
     <div id="editor" contenteditable="true" spellcheck="false" autocorrect="off"></div>
    </div>
+   <div id="calView" class="hidden"></div>
    <div id="empty" class="hidden">Užrašų dar nėra. Spauskite ☰ → „+ Naujas“.</div>
   </div>
  </main>
@@ -571,7 +618,7 @@ body.wide #title{font-size:30px;font-weight:600}
 var TEMPLATE='<!doctype html>\n'+document.documentElement.outerHTML;
 var OPEN='<'+'script id="store" type="application/json">';
 var CLOSE='</'+'script>';
-var VERSION='120';
+var VERSION='122';
 var ITER=310000;
 var PW_MASK=!matchMedia('(pointer:coarse)').matches;   // kompiuteryje slaptažodis vedamas į savą laukelį (ne <input>) – naršyklės jo nesiūlo išsaugoti
 var enc=new TextEncoder(),dec=new TextDecoder();
@@ -1808,7 +1855,7 @@ $('noteGroup').onchange=function(){
 };
 function fmt(t){try{return new Date(t).toLocaleString('lt-LT',{dateStyle:'short',timeStyle:'short'});}catch(_){return new Date(t).toLocaleString();}}
 function plain(html){
- return (html||'').replace(/<span class="nc-grip"[^>]*>[^<]*<\/span>/g,'').replace(/<\/span>(?=<span class="nc-)/g,' ').replace(/<img[^>]*>/gi,' ').replace(/<(br|\/div|\/p|\/li|\/h2|\/td|\/th|\/tr)[^>]*>/gi,' ').replace(/<[^>]+>/g,'')
+ return (html||'').replace(/<span class="nc-grip"[^>]*>[^<]*<\/span>/g,'').replace(/<div class="nc-cal[^"]*"[^>]*>[\s\S]*?<\/div>/g,' ').replace(/<\/span>(?=<span class="nc-)/g,' ').replace(/<img[^>]*>/gi,' ').replace(/<(br|\/div|\/p|\/li|\/h2|\/td|\/th|\/tr)[^>]*>/gi,' ').replace(/<[^>]+>/g,'')
   .replace(/&nbsp;/g,' ').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&amp;/g,'&')
   .replace(/\s+/g,' ').trim();
 }
@@ -2076,6 +2123,7 @@ async function endGroupDrag(e){
 function scheduleList(){clearTimeout(listTimer);listTimer=setTimeout(renderList,400);}
 
 function openNote(n){
+ calMode=false;calSel=null;$('calView').classList.add('hidden');$('calBtn').classList.remove('on');
  cur=n;savedRange=null;
  $('doc').classList.toggle('hidden',!n);$('noteGroupRow').classList.toggle('hidden',!n);$('empty').classList.toggle('hidden',!!n);
  $('empty').textContent=isWide()?(data.notes.length?'Pasirinkite užrašą sąraše.':'Užrašų dar nėra. Spauskite „+ Naujas“.'):(filter==='tree'?
@@ -2102,8 +2150,119 @@ function buildCardJump(){
  items.forEach(function(x){addOpt(sel,String(x.i),x.idx+' – '+x.t);});
  sel.value=items.some(function(x){return String(x.i)===old;})?old:'';
  $('cardJumpLbl').classList.toggle('hidden',!items.length);
- $('noteGroupRow').classList.toggle('hidden',!cur||!items.length);   // „Grupė:“ dabar per grupės ✎ – tuščios eilutės nerodom
+ $('noteGroupRow').classList.toggle('hidden',!cur);   // eilutėje – kortelių paieška ir kalendorius
 }
+
+/* ---------- Kalendoriaus vaizdas: užrašo kortelės pagal datas ---------- */
+var calMode=false,calYear=null,calSel=null;
+var CAL_M=['Sausis','Vasaris','Kovas','Balandis','Gegužė','Birželis','Liepa','Rugpjūtis','Rugsėjis','Spalis','Lapkritis','Gruodis'];
+var CAL_MG=['sausio','vasario','kovo','balandžio','gegužės','birželio','liepos','rugpjūčio','rugsėjo','spalio','lapkričio','gruodžio'];
+var CAL_WD=['sekmadienis','pirmadienis','antradienis','trečiadienis','ketvirtadienis','penktadienis','šeštadienis'];
+function isoD(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function calCards(){
+ var m={};
+ editor.querySelectorAll('.ncard').forEach(function(el,i){
+  var d=cardData(el);if(!/^\d{4}-\d\d-\d\d$/.test(d.date||''))return;
+  var b=el.querySelector('.nc-body'),c=b?getComputedStyle(b).backgroundColor:'#dcfce7';
+  (m[d.date]=m[d.date]||[]).push({el:el,c:c,t:(d.idx?d.idx+' ':'')+(d.title||cardType(d.type)[1])});
+ });
+ return m;
+}
+function dayBg(list){
+ var cs=[];list.forEach(function(x){if(cs.indexOf(x.c)<0)cs.push(x.c);});
+ if(cs.length===1)return cs[0];
+ var st=[];cs.forEach(function(c,i){st.push(c+' '+(i*100/cs.length)+'% '+((i+1)*100/cs.length)+'%');});
+ return 'linear-gradient(135deg,'+st.join(',')+')';
+}
+function setCalMode(on){
+ calMode=on;
+ $('doc').classList.toggle('hidden',on||!cur);$('calView').classList.toggle('hidden',!on);
+ $('calBtn').classList.toggle('on',on);$('calBtn').title=on?'Grįžti į užrašą':'Kalendorius: kortelės pagal datas';
+ document.querySelectorAll('.ed').forEach(function(b){b.disabled=on||!cur;});
+ $('scroll').scrollTop=0;
+ if(on){renderCal();calScrollTo();}
+}
+// Atidarius kalendorių – nuslenkam iki aktualaus mėnesio (pažymėtos dienos, šio mėnesio arba pirmo su kortelėmis)
+function calScrollTo(){
+ var now=new Date(),mo=-1;
+ if(calSel&&+calSel.slice(0,4)===calYear)mo=+calSel.slice(5,7)-1;
+ else if(calYear===now.getFullYear())mo=now.getMonth();
+ else{var k=Object.keys(calCards()).sort().filter(function(x){return +x.slice(0,4)===calYear;})[0];if(k)mo=+k.slice(5,7)-1;}
+ var el=mo>0?$('calView').querySelectorAll('.calM')[mo]:null;if(!el)return;
+ var sc=$('scroll'),top=el.getBoundingClientRect().top-sc.getBoundingClientRect().top+sc.scrollTop;
+ sc.scrollTop=Math.max(0,top-$('noteGroupRow').offsetHeight-$('calView').querySelector('.calTop').offsetHeight-8);
+}
+function renderCal(){
+ var m=calCards(),keys=Object.keys(m).sort(),now=new Date(),ty=now.getFullYear(),today=isoD(now);
+ if(calYear===null){
+  var yrs=keys.map(function(k){return +k.slice(0,4);});
+  calYear=(!yrs.length||yrs.indexOf(ty)>=0)?ty:(yrs.filter(function(y){return y>ty;})[0]||yrs[yrs.length-1]);
+ }
+ var h='<div class="calTop"><button type="button" class="nav" data-y="-1" title="Ankstesni metai">‹</button><span class="yr">'+calYear+'</span><button type="button" class="nav" data-y="1" title="Kiti metai">›</button>'+
+  '<span class="sp"></span><button type="button" id="calShow" class="hidden">Rodyti kortelę</button><button type="button" id="calAdd" class="primary">+ Pridėti</button>'+
+  '<div class="calInfo" id="calInfo"></div></div><div class="calGrid">';
+ for(var mo=0;mo<12;mo++){
+  var first=new Date(calYear,mo,1),off=(first.getDay()+6)%7,days=new Date(calYear,mo+1,0).getDate(),cnt=0,cells='';
+  for(var e=0;e<off;e++)cells+='<span></span>';
+  for(var d=1;d<=days;d++){
+   var v=calYear+'-'+('0'+(mo+1)).slice(-2)+'-'+('0'+d).slice(-2),wd=(off+d-1)%7,list=m[v],c='',st='';
+   if(wd>4)c+=' we';if(v===today)c+=' t';if(v===calSel)c+=' s';
+   if(list){cnt++;c+=' has';st=' style="background:'+dayBg(list)+'"';}
+   cells+='<button type="button" class="'+c.trim()+'" data-v="'+v+'"'+st+(list?' title="'+esc(list.map(function(x){return x.t;}).join(', '))+'"':'')+'>'+d+'</button>';
+  }
+  h+='<div class="calM"><h4>'+CAL_M[mo]+(cnt?' <span>· '+cnt+' d.</span>':'')+'</h4><div class="calD">'+
+   ['P','A','T','K','P','Š','S'].map(function(w){return '<span class="w">'+w+'</span>';}).join('')+cells+'</div></div>';
+ }
+ $('calView').innerHTML=h+'</div>';
+ $('calView').querySelector('.calTop').style.top=$('noteGroupRow').offsetHeight+'px';   // lieka po kortelių paieškos eilute
+ calInfo(m);
+}
+function calInfo(m){
+ m=m||calCards();
+ var info=$('calInfo'),list=calSel?m[calSel]:null;
+ if(!calSel){info.textContent='Pažymėkite dieną, tada „+ Pridėti“ sukurs tos dienos kortelę.';}
+ else{
+  var d=new Date(calSel+'T12:00');
+  info.innerHTML='<b>'+d.getFullYear()+' m. '+CAL_MG[d.getMonth()]+' '+d.getDate()+' d., '+CAL_WD[d.getDay()]+'</b>'+
+   (list?' · '+esc(list.map(function(x){return x.t;}).join(', ')):' · kortelių nėra');
+ }
+ $('calShow').classList.toggle('hidden',!list);
+}
+function flashCard(el){
+ el.scrollIntoView({block:'center',behavior:'smooth'});
+ var b=el.querySelector('.nc-body');if(b)b.animate([{outline:'3px solid #2f6fde'},{outline:'3px solid #2f6fde',offset:.6},{outline:'3px solid transparent'}],{duration:1600});
+}
+// Nauja kortelė įterpiama pagal datą: prieš pirmą vėlesnės datos kortelę, kitaip – po paskutinės kortelės
+function insertCardByDate(el,date){
+ var cards=Array.prototype.filter.call(editor.querySelectorAll('.ncard'),function(c){return c.parentNode===editor;}),next=null;
+ for(var i=0;i<cards.length;i++){var cd=cardData(cards[i]).date;if(date&&cd&&cd>date){next=cards[i];break;}}
+ if(next)editor.insertBefore(el,next);
+ else if(cards.length)editor.insertBefore(el,cards[cards.length-1].nextSibling);
+ else editor.appendChild(el);
+ if(!el.nextSibling){var nx=document.createElement('div');nx.innerHTML='<br>';editor.appendChild(nx);}
+}
+$('calBtn').onclick=function(){if(cur)setCalMode(!calMode);};
+$('calView').addEventListener('click',async function(e){
+ var b=e.target.closest('button');if(!b)return;
+ if(b.dataset.y){calYear+=+b.dataset.y;renderCal();return;}
+ if(b.dataset.v){
+  var was=$('calView').querySelector('.calD button.s');if(was)was.classList.remove('s');
+  calSel=b.dataset.v;b.classList.add('s');
+  calInfo();return;
+ }
+ if(b.id==='calShow'){var l=calCards()[calSel];if(l){setCalMode(false);flashCard(l[0].el);}return;}
+ if(b.id==='calAdd'){
+  if(!calSel){$('calInfo').innerHTML='<b>Pirma pažymėkite dieną.</b>';return;}
+  var r=await cardDialog({type:'hotel',date:calSel},false);
+  if(!r||r.act!=='save')return;
+  var tmp=document.createElement('div');tmp.innerHTML=cardHTML(r.data);
+  insertCardByDate(tmp.firstChild,r.data.date);
+  editorChanged();
+  if(r.data.date){calSel=r.data.date;calYear=+r.data.date.slice(0,4);}
+  renderCal();
+ }
+});
+
 $('cardJump').onchange=function(){
  var el=editor.querySelectorAll('.ncard')[parseInt(this.value,10)];if(!el)return;
  el.scrollIntoView({block:'center',behavior:'smooth'});
@@ -2606,6 +2765,42 @@ editor.addEventListener('drop',function(e){
  var f=e.dataTransfer&&e.dataTransfer.files;
  if(f&&f.length){e.preventDefault();insertImages(Array.prototype.slice.call(f));}
 });
+
+
+/* ---------- Lietuviškas datos pasirinkimas kortelėje ---------- */
+(function(){
+ var M=['sausis','vasaris','kovas','balandis','gegužė','birželis','liepa','rugpjūtis','rugsėjis','spalis','lapkritis','gruodis'];
+ var W=['Pr','An','Tr','Kt','Pn','Še','Sk'];
+ var inp=$('cdDate'),pop=$('calPop'),vy,vm;
+ function iso(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+ function draw(){
+  var sel=inp.value,today=iso(new Date()),first=new Date(vy,vm,1),off=(first.getDay()+6)%7,start=new Date(vy,vm,1-off);
+  var h='<div class="ch"><button type="button" class="nav" data-m="-1" title="Ankstesnis mėnuo">‹</button><b>'+M[vm].charAt(0).toUpperCase()+M[vm].slice(1)+' '+vy+'</b><button type="button" class="nav" data-m="1" title="Kitas mėnuo">›</button></div><div class="g">';
+  W.forEach(function(w,i){h+='<div class="w'+(i>4?' we':'')+'">'+w+'</div>';});
+  for(var i=0;i<42;i++){
+   var d=new Date(start.getFullYear(),start.getMonth(),start.getDate()+i),v=iso(d),c='d';
+   if(d.getMonth()!==vm)c+=' o';if(i%7>4)c+=' we';if(v===today)c+=' t';if(v===sel)c+=' s';
+   h+='<button type="button" class="'+c+'" data-v="'+v+'">'+d.getDate()+'</button>';
+  }
+  h+='</div><div class="cf"><button type="button" data-a="clr">Išvalyti</button><button type="button" data-a="today">Šiandien</button></div>';
+  pop.innerHTML=h;
+ }
+ function open(){var d=inp.value?new Date(inp.value+'T12:00'):new Date();if(isNaN(d))d=new Date();vy=d.getFullYear();vm=d.getMonth();draw();pop.classList.remove('hidden');}
+ function close(){pop.classList.add('hidden');}
+ inp.addEventListener('click',function(e){e.preventDefault();if(pop.classList.contains('hidden'))open();else close();});
+ inp.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}else if(e.key==='Escape'&&!pop.classList.contains('hidden')){e.stopPropagation();close();}else if(e.key==='Delete'||e.key==='Backspace'){inp.value='';}});
+ pop.addEventListener('mousedown',function(e){e.preventDefault();});   // fokusas lieka lauke
+ pop.addEventListener('click',function(e){
+  e.preventDefault();e.stopPropagation();
+  var b=e.target.closest('button');if(!b)return;
+  if(b.dataset.m){vm+=+b.dataset.m;if(vm<0){vm=11;vy--;}else if(vm>11){vm=0;vy++;}draw();return;}
+  if(b.dataset.v){inp.value=b.dataset.v;close();return;}
+  if(b.dataset.a==='clr'){inp.value='';close();return;}
+  if(b.dataset.a==='today'){inp.value=iso(new Date());close();}
+ });
+ document.addEventListener('click',function(e){if(!pop.classList.contains('hidden')&&e.target!==inp&&!pop.contains(e.target))close();},true);
+ new MutationObserver(function(){if($('cardDlg').classList.contains('hidden'))close();}).observe($('cardDlg'),{attributes:true,attributeFilter:['class']});
+})();
 
 /* ---------- Išsaugojimas ---------- */
 function setStatus(t,isDirty){var s=$('status');s.textContent=t;s.classList.toggle('dirty',!!isDirty);}
