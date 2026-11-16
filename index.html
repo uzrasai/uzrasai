@@ -399,8 +399,8 @@ body.wide #title{font-size:30px;font-weight:600}
 #calView .calTop .sp{flex:1}
 #calVw{display:none}
 @media (max-width:760px){#calVw{display:inline-flex}#calView .calTop{gap:6px}#calView .calTop>button:not(.nav){min-height:36px;padding:6px 10px;font-size:14px}#calView .calTop .yr{font-size:18px;min-width:48px}}
-#calView .calInfo{width:100%;font-size:14px;color:var(--muted);min-height:1.4em}
-#calView .calInfo:empty{display:none}
+#calView .calInfo{width:100%;font-size:14px;color:var(--muted);min-height:1.4em;line-height:1.4em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}   /* kompiuteryje visada viena eilutė – kalendorius nejuda */
+#calView .calTop>button{height:36px;min-height:36px;padding-top:0;padding-bottom:0}
 #calView .calInfo b{color:var(--text);font-weight:600}
 #calView .calGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
 #calView .calM{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.07);padding:10px 10px 12px}
@@ -431,6 +431,7 @@ body.wide #calView .calD button{aspect-ratio:auto;height:100%;font-size:clamp(11
  #calView .calD button{aspect-ratio:auto;height:100%;font-size:17px;border-radius:8px}
  body.calOn:not(.calYV) #scroll{scroll-snap-type:y proximity}
  #calView .calInfo:empty{display:none}
+ #calView .calInfo{white-space:normal}
  /* visų metų vaizdas telefone: 2 stulpeliai, skaičiai be rėmelių */
  #calView.yv .calGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
  #calView.yv .calM{height:auto;padding:10px 8px;scroll-snap-align:none}
@@ -683,7 +684,7 @@ body.wide #calView .calD button{aspect-ratio:auto;height:100%;font-size:clamp(11
 var TEMPLATE='<!doctype html>\n'+document.documentElement.outerHTML;
 var OPEN='<'+'script id="store" type="application/json">';
 var CLOSE='</'+'script>';
-var VERSION='131';
+var VERSION='132';
 var ITER=310000;
 var PW_MASK=!matchMedia('(pointer:coarse)').matches;   // kompiuteryje slaptažodis vedamas į savą laukelį (ne <input>) – naršyklės jo nesiūlo išsaugoti
 var enc=new TextEncoder(),dec=new TextDecoder();
