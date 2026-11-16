@@ -419,7 +419,15 @@ body.wide #calView .calM h4{font-size:15px}
 body.wide #calView .calD{flex:1;min-height:0;grid-template-rows:auto repeat(6,minmax(0,1fr))}
 body.wide #calView .calD{gap:4px}
 body.wide #calView .calD button{aspect-ratio:auto;height:100%;font-size:clamp(11px,.9vw,15px);border-radius:5px}
-@media (max-width:760px){#calView .calGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}#calView .calM{padding:8px 6px}#calView .calD{gap:2px}#calView .calD button{aspect-ratio:1/1;font-size:12px;border-radius:5px}}
+@media (max-width:760px){
+ #calView .calGrid{grid-template-columns:minmax(0,1fr);gap:16px}
+ #calView .calM{height:var(--mh,auto);display:flex;flex-direction:column;padding:12px 10px;scroll-snap-align:start;scroll-margin-top:var(--mt,0)}
+ #calView .calM h4{font-size:18px;margin-bottom:10px}
+ #calView .calD{flex:1;min-height:0;gap:5px;grid-template-rows:auto repeat(6,minmax(0,1fr))}
+ #calView .calD .w{font-size:13px}
+ #calView .calD button{aspect-ratio:auto;height:100%;font-size:17px;border-radius:8px}
+ body.calOn #scroll{scroll-snap-type:y proximity}
+}
 </style>
 </head>
 <body>
@@ -629,7 +637,7 @@ body.wide #calView .calD button{aspect-ratio:auto;height:100%;font-size:clamp(11
 var TEMPLATE='<!doctype html>\n'+document.documentElement.outerHTML;
 var OPEN='<'+'script id="store" type="application/json">';
 var CLOSE='</'+'script>';
-var VERSION='124';
+var VERSION='126';
 var ITER=310000;
 var PW_MASK=!matchMedia('(pointer:coarse)').matches;   // kompiuteryje slaptažodis vedamas į savą laukelį (ne <input>) – naršyklės jo nesiūlo išsaugoti
 var enc=new TextEncoder(),dec=new TextDecoder();
@@ -2011,7 +2019,6 @@ function renderWide(q,match){
   var gn=(filter!==n.group&&noteGroupId(n))?groupName(noteGroupId(n)):'';
   d.textContent=fmtList(n.updated)+(gn?' · '+gn:'');tx.appendChild(d);
   li.appendChild(tx);
-  var im=firstImg(n.html);if(im){var i=document.createElement('img');i.className='th';i.alt='';i.src=im;li.appendChild(i);}
   li.onclick=function(){openNote(n);setView('note');};
   box.appendChild(li);
  });
@@ -2135,7 +2142,7 @@ async function endGroupDrag(e){
 function scheduleList(){clearTimeout(listTimer);listTimer=setTimeout(renderList,400);}
 
 function openNote(n){
- calMode=false;calSel=null;$('calView').classList.add('hidden');$('calBtn').classList.remove('on');
+ calMode=false;calSel=null;document.body.classList.remove('calOn');$('calView').classList.add('hidden');$('calBtn').classList.remove('on');
  cur=n;savedRange=null;
  $('doc').classList.toggle('hidden',!n);$('noteGroupRow').classList.toggle('hidden',!n);$('empty').classList.toggle('hidden',!!n);
  $('empty').textContent=isWide()?(data.notes.length?'Pasirinkite užrašą sąraše.':'Užrašų dar nėra. Spauskite „+ Naujas“.'):(filter==='tree'?
@@ -2187,7 +2194,7 @@ function dayBg(list){
  return 'linear-gradient(135deg,'+st.join(',')+')';
 }
 function setCalMode(on){
- calMode=on;
+ calMode=on;document.body.classList.toggle('calOn',on);
  $('doc').classList.toggle('hidden',on||!cur);$('calView').classList.toggle('hidden',!on);
  $('calBtn').classList.toggle('on',on);$('calBtn').title=on?'Grįžti į užrašą':'Kalendorius: kortelės pagal datas';
  document.querySelectorAll('.ed').forEach(function(b){b.disabled=(on&&b.id!=='insBtn')||!cur;});
@@ -2279,7 +2286,13 @@ async function calAddCard(){
 // Kompiuteryje 12 mėnesių (3 eilės po 4) ištempiami per visą laisvą aukštį
 function calFit(){
  if(!calMode)return;var g=$('calView').querySelector('.calGrid'),t=$('calView').querySelector('.calTop');if(!g||!t)return;
- if(!isWide()){g.style.height='';return;}
+ if(!isWide()){   // telefone – vienas mėnuo per visą ekraną, kiti slenkami
+  g.style.height='';
+  var off=$('noteGroupRow').offsetHeight+t.offsetHeight;
+  $('calView').style.setProperty('--mh',Math.max(320,$('scroll').clientHeight-off-24)+'px');
+  $('calView').style.setProperty('--mt',(off+8)+'px');
+  return;
+ }
  var h=$('scroll').clientHeight-$('noteGroupRow').offsetHeight-t.offsetHeight-12-16;
  g.style.height=Math.max(480,h)+'px';
 }
