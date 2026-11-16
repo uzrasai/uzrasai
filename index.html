@@ -279,6 +279,7 @@ body.nav3 #search{border-radius:8px;padding-left:34px;background:var(--bg) url("
 #midHead{display:flex;align-items:center;gap:8px;padding:16px 16px 8px}
 #midTitle{flex:1;min-width:0;font-size:18px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #midCnt{font-size:13px;color:var(--muted)}
+#midHead #newBtn{flex:none;min-height:34px;padding:5px 14px;font-size:14px;border-radius:9px}
 #notes{flex:1;overflow:auto;margin:0;padding:6px 8px;list-style:none}
 #notes li{display:flex;gap:12px;align-items:flex-start;padding:12px 12px;margin:0 0 4px;border-radius:12px;border:1px solid var(--line);cursor:pointer}
 #notes li:hover{background:var(--nav)}
@@ -416,6 +417,9 @@ body.wide #title{font-size:30px;font-weight:600}
 #calView .calD button:hover{border-color:var(--accent)}
 
 body.wide #calView{padding-bottom:30px}
+body.wide #calShow{order:1;margin-left:6px}   /* „Rodyti kortelę“ – šalia metų */
+body.wide #calView .calTop .sp{order:2}
+body.wide #calView .calInfo{order:3}
 body.wide #calView .calGrid{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:10px}
 body.wide #calView .calM{display:flex;flex-direction:column;min-height:0;padding:8px 10px 10px}
 body.wide #calView .calM h4{font-size:15px}
@@ -646,10 +650,12 @@ body.wide #calView .calD button{aspect-ratio:auto;height:100%;font-size:clamp(11
     <div id="gearMenu" class="hidden" role="menu">
      <button id="dbxBtn" role="menuitem">Dropbox…</button>
      <button id="dkBtn" role="menuitem">Įrenginio raktas…</button>
-     <button id="fileBtn" role="menuitem">Atsisiųsti failą (kopija)</button>
+     <button id="fileBtn" role="menuitem" class="hidden">Atsisiųsti failą (kopija)</button>
+     <button id="gExpBtn" role="menuitem">Eksportuoti</button>
+     <button id="gImpBtn" role="menuitem">Importuoti</button>
      <button id="imgPxBtn" role="menuitem">Paveikslėlių dydis…</button>
      <button id="pwBtn" role="menuitem">Keisti slaptažodį</button>
-     <button id="lockNowBtn" role="menuitem">Užrakinti</button>
+     <button id="lockNowBtn" role="menuitem">Atsijungti</button>
      <div class="ver" id="verSide" style="padding:6px 12px 2px;text-align:left"></div>
     </div>
    </span>
@@ -686,7 +692,7 @@ body.wide #calView .calD button{aspect-ratio:auto;height:100%;font-size:clamp(11
 var TEMPLATE='<!doctype html>\n'+document.documentElement.outerHTML;
 var OPEN='<'+'script id="store" type="application/json">';
 var CLOSE='</'+'script>';
-var VERSION='133';
+var VERSION='135';
 var ITER=310000;
 var PW_MASK=!matchMedia('(pointer:coarse)').matches;   // kompiuteryje slaptažodis vedamas į savą laukelį (ne <input>) – naršyklės jo nesiūlo išsaugoti
 var enc=new TextEncoder(),dec=new TextDecoder();
@@ -1982,6 +1988,7 @@ function applyLayout(){
  document.body.classList.toggle('wide',w);
  document.body.classList.toggle('phone',!w);
  if(st.parentNode!==$('mid'))$('midHead').after(st);
+ if($('newBtn').parentNode!==$('midHead'))$('midHead').appendChild($('newBtn'));   // „+ Naujas“ – šalia „Visi užrašai“
  if(w){closeDrawer();document.body.classList.remove('noteView');}
  $('menuBtn').innerHTML=w?'☰':'<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 19-7-7 7-7M19 12H5"/></svg>';
  $('menuBtn').title=w?'Užrašų sąrašas':'Atgal į sąrašą';
@@ -3173,6 +3180,8 @@ async function devKeySetup(){
 $('dbxBtn').onclick=dbxSetup;
 $('dkBtn').onclick=devKeySetup;
 $('fileBtn').onclick=function(){closeDrawer();saveFile();};
+$('gExpBtn').onclick=function(){closeDrawer();$('exportBtn').click();};
+$('gImpBtn').onclick=function(){closeDrawer();$('importBtn').click();};
 $('saveBtn').onclick=save;
 document.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();save();}});
 window.addEventListener('beforeunload',function(e){if(dirty){e.preventDefault();e.returnValue='';}});
@@ -3185,7 +3194,7 @@ $('pwBtn').onclick=function(){closeDrawer();setLockMode('change');};
 $('lockNowBtn').onclick=function(){
  if(!dirty){location.reload();return;}
  closeDrawer();
- askConfirm('Neišsaugoti pakeitimai','Yra neišsaugotų pakeitimų. Užrakinus jie dings.','Užrakinti',true).then(function(ok){
+ askConfirm('Neišsaugoti pakeitimai','Yra neišsaugotų pakeitimų. Atsijungus jie dings.','Atsijungti',true).then(function(ok){
   if(!ok)return;dirty=false;location.reload();
  });
 };
