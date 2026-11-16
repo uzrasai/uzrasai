@@ -473,11 +473,16 @@ body.wide #calView .calD button{aspect-ratio:auto;height:100%;font-size:clamp(11
   background:var(--c);color:color-mix(in srgb,var(--c) 28%,#000);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 70%,#000)}
  #calView.mv .calD .more{font-size:11px;font-weight:700;color:var(--muted);text-align:center;line-height:14px}
  /* metai */
- #calView.yv .calM{background:var(--panel);border:none;box-shadow:none;border-radius:12px;padding:8px 5px 6px}
- #calView.yv .calM h4{font-size:15px;font-weight:700;margin:0 3px 6px}
- #calView.yv .calM h4 span{font-size:12px;font-weight:500}
- #calView.yv .calD .w{font-size:10px;font-weight:600}
- #calView.yv .calD button{font-size:12px;border-radius:6px}
+ /* metai – matmenys pagal pavyzdį (telefono taškais) */
+ #calView.yv{padding-left:8px;padding-right:8px}
+ #calView.yv .calTop{margin:0 -8px 8px;padding:8px}
+ #calView.yv .calGrid{gap:8px}
+ #calView.yv .calM{background:var(--panel);border:none;box-shadow:none;border-radius:12px;padding:10px 3px 6px}
+ #calView.yv .calM h4{font-size:17px;font-weight:800;line-height:1.2;margin:0 6px 7px;letter-spacing:-.01em}
+ #calView.yv .calM h4 span{font-size:14px;font-weight:500;color:var(--muted)}
+ #calView.yv .calD{gap:2px;flex:none;align-content:start}   /* eilutės neištempiamos – kaip pavyzdyje */
+ #calView.yv .calD .w{font-size:12px;font-weight:500;line-height:1;padding:0 0 6px}
+ #calView.yv .calD button{font-size:14px;font-weight:500;line-height:1;border-radius:8px}
  #calView.yv .calD button.has{color:color-mix(in srgb,var(--c,#16202c) 30%,#000);font-weight:800}
  #calView.yv .calD button.we:not(.has){color:var(--muted)}
  #calView.yv .calD button.t{box-shadow:none;outline:2px solid var(--text);outline-offset:-1px}
@@ -707,7 +712,7 @@ body.wide #calView .calD .w{line-height:1;padding:3px 0}
 var TEMPLATE='<!doctype html>\n'+document.documentElement.outerHTML;
 var OPEN='<'+'script id="store" type="application/json">';
 var CLOSE='</'+'script>';
-var VERSION='137';
+var VERSION='138';
 var ITER=310000;
 var PW_MASK=!matchMedia('(pointer:coarse)').matches;   // kompiuteryje slaptažodis vedamas į savą laukelį (ne <input>) – naršyklės jo nesiūlo išsaugoti
 var enc=new TextEncoder(),dec=new TextDecoder();
