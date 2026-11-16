@@ -483,6 +483,19 @@ body.wide #calView .calD button{aspect-ratio:auto;height:100%;font-size:clamp(11
  #calView.yv .calD button.t{box-shadow:none;outline:2px solid var(--text);outline-offset:-1px}
  #calView.yv .calD button.s{outline:2px solid var(--accent);outline-offset:-1px}
 }
+
+/* ---------- Kompiuteris: kalendoriaus juosta paieškos eilutėje ---------- */
+#noteGroupRow .calTop{display:flex;align-items:center;gap:8px;flex:1 1 auto;min-width:0;margin-left:4px}
+#noteGroupRow .calTop .sp,#noteGroupRow #calVw{display:none}
+#noteGroupRow .calTop .calInfo{order:0;flex:1 1 auto;min-width:0;text-align:right;font-size:14px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#noteGroupRow .calTop .calInfo b{color:var(--text);font-weight:600}
+#noteGroupRow #calShow{order:1;height:36px;min-height:36px;padding:0 12px;white-space:nowrap;flex:none}
+#noteGroupRow .calTop .nav,#noteGroupRow .calTop .yr{order:2}
+#noteGroupRow .calTop .nav{width:36px;height:36px;min-height:36px;padding:0;font-size:18px;color:var(--muted)}
+#noteGroupRow .calTop .yr{font-size:20px;font-weight:600;min-width:56px;text-align:center}
+body.wide #calView{padding-top:12px}
+body.wide #calView .calD button{font-size:var(--dfs,14px);line-height:1;padding:0;overflow:hidden}
+body.wide #calView .calD .w{line-height:1;padding:3px 0}
 </style>
 </head>
 <body>
@@ -694,7 +707,7 @@ body.wide #calView .calD button{aspect-ratio:auto;height:100%;font-size:clamp(11
 var TEMPLATE='<!doctype html>\n'+document.documentElement.outerHTML;
 var OPEN='<'+'script id="store" type="application/json">';
 var CLOSE='</'+'script>';
-var VERSION='136';
+var VERSION='137';
 var ITER=310000;
 var PW_MASK=!matchMedia('(pointer:coarse)').matches;   // kompiuteryje slaptažodis vedamas į savą laukelį (ne <input>) – naršyklės jo nesiūlo išsaugoti
 var enc=new TextEncoder(),dec=new TextDecoder();
@@ -2200,7 +2213,7 @@ async function endGroupDrag(e){
 function scheduleList(){clearTimeout(listTimer);listTimer=setTimeout(renderList,400);}
 
 function openNote(n){
- calMode=false;calSel=null;document.body.classList.remove('calOn');$('calEye').classList.add('hidden');$('calView').classList.add('hidden');$('calBtn').classList.remove('on');
+ calMode=false;calSel=null;document.body.classList.remove('calOn');$('calEye').classList.add('hidden');var ot0=$('noteGroupRow').querySelector('.calTop');if(ot0)ot0.remove();$('calView').classList.add('hidden');$('calBtn').classList.remove('on');
  cur=n;savedRange=null;
  $('doc').classList.toggle('hidden',!n);$('noteGroupRow').classList.toggle('hidden',!n);$('empty').classList.toggle('hidden',!!n);
  $('empty').textContent=isWide()?(data.notes.length?'Pasirinkite užrašą sąraše.':'Užrašų dar nėra. Spauskite „+ Naujas“.'):(filter==='tree'?
@@ -2252,7 +2265,7 @@ function dayBg(list){
  return 'linear-gradient(135deg,'+st.join(',')+')';
 }
 function setCalMode(on){
- calMode=on;document.body.classList.toggle('calOn',on);if(!on)$('calEye').classList.add('hidden');
+ calMode=on;document.body.classList.toggle('calOn',on);if(!on){$('calEye').classList.add('hidden');var ot=$('noteGroupRow').querySelector('.calTop');if(ot)ot.remove();}
  $('doc').classList.toggle('hidden',on||!cur);$('calView').classList.toggle('hidden',!on);
  $('calBtn').classList.toggle('on',on);$('calBtn').title=on?'Grįžti į užrašą':'Kalendorius: kortelės pagal datas';
  document.querySelectorAll('.ed').forEach(function(b){b.disabled=(on&&b.id!=='insBtn')||!cur;});
@@ -2304,7 +2317,10 @@ function renderCal(){
  }
  $('calView').innerHTML=h+'</div>';
  $('calView').classList.toggle('yv',calYV&&!isWide());$('calView').classList.toggle('mv',MV);document.body.classList.toggle('calYV',calYV&&!isWide());
- $('calView').querySelector('.calTop').style.top=$('noteGroupRow').offsetHeight+'px';   // lieka po kortelių paieškos eilute
+ var oldT=$('noteGroupRow').querySelector('.calTop');if(oldT)oldT.remove();
+ var tNew=$('calView').querySelector('.calTop');
+ if(isWide())$('noteGroupRow').appendChild(tNew);   // kompiuteryje – metai ir informacija paieškos eilutėje, kalendoriui daugiau aukščio
+ else tNew.style.top=$('noteGroupRow').offsetHeight+'px';   // telefone lieka po kortelių paieškos eilute
  calInfo(m);
  calFit();
 }
@@ -2335,7 +2351,7 @@ function insertCardByDate(el,date){
 }
 $('calBtn').onclick=function(){if(cur)setCalMode(!calMode);};
 $('calEye').onclick=function(){var l=calCards()[calSel];if(l){setCalMode(false);flashCard(l[0].el);}};
-$('calView').addEventListener('click',async function(e){
+async function calClick(e){
  var hm=e.target.closest('h4[data-mo]');
  if(hm&&calYV&&!isWide()){calYV=false;lsSet('uzrasai-calyv',null);var mo=+hm.dataset.mo;renderCal();calScrollTo(mo);return;}   // metų vaizde – atidaryti mėnesį
  var b=e.target.closest('button');if(!b)return;
@@ -2347,7 +2363,9 @@ $('calView').addEventListener('click',async function(e){
   calInfo();return;
  }
  if(b.id==='calShow'){var l=calCards()[calSel];if(l){setCalMode(false);flashCard(l[0].el);}return;}
-});
+}
+$('calView').addEventListener('click',calClick);
+$('noteGroupRow').addEventListener('click',function(e){if(e.target.closest('.calTop'))calClick(e);});
 async function calAddCard(){
  if(!calSel){$('calInfo').innerHTML='<b>Pirma pažymėkite dieną, tada ⊞.</b>';return;}
  var r=await cardDialog({type:'hotel',date:calSel},false);
@@ -2360,7 +2378,7 @@ async function calAddCard(){
 }
 // Kompiuteryje 12 mėnesių (3 eilės po 4) ištempiami per visą laisvą aukštį
 function calFit(){
- if(!calMode)return;var g=$('calView').querySelector('.calGrid'),t=$('calView').querySelector('.calTop');if(!g||!t)return;
+ if(!calMode)return;var g=$('calView').querySelector('.calGrid'),t=document.querySelector('#calView .calTop,#noteGroupRow .calTop');if(!g||!t)return;
  if(!isWide()){   // telefone – vienas mėnuo per visą ekraną, kiti slenkami
   g.style.height='';
   var off=$('noteGroupRow').offsetHeight+t.offsetHeight;
@@ -2368,8 +2386,11 @@ function calFit(){
   $('calView').style.setProperty('--mt',(off+8)+'px');
   return;
  }
- var h=$('scroll').clientHeight-$('noteGroupRow').offsetHeight-t.offsetHeight-12-42;   // apačioje 30px tarpas
- g.style.height=Math.max(480,h)+'px';
+ var h=Math.max(690,$('scroll').clientHeight-$('noteGroupRow').offsetHeight-12-42);   // apačioje 30px tarpas; mažiausiai ~24px eilutei (žemame lange – slenkama)
+ g.style.height=h+'px';
+ // dienų skaičių dydis pagal eilutės aukštį, kad niekada neužliptų vienas ant kito
+ var rowH=((h-20)/3-30-22-20)/6-4;
+ $('calView').style.setProperty('--dfs',Math.max(9,Math.min(15,Math.floor(rowH*0.6)))+'px');
 }
 window.addEventListener('resize',calFit);
 
