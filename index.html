@@ -315,7 +315,7 @@ body.nav3 #sideBottom>button{flex:1 1 0;min-width:0}
 body.nav3 #sideBottom button{min-height:34px;padding:5px 10px;font-size:14px;background:var(--panel)}
 body.wide #bar{padding:6px 12px}
 body.nav3 #bar{border-bottom:none}
-body.nav3 #noteGroupRow{box-shadow:none}
+body.nav3 #noteGroupRow{box-shadow:none;padding-top:2px}   /* mažesnis tarpas iki įrankių juostos */
 body.nav3 #scroll,body.nav3 #noteGroupRow{background:var(--panel)}
 body.wide #doc{max-width:860px;padding:26px 32px 120px}
 body.wide #title{font-size:30px;font-weight:600}
@@ -535,9 +535,9 @@ body.calOn.wide #cardJumpLbl{max-width:calc(50% - 150px)}
 /* telefone – metų / mėnesio perjungimas ikona kairėje nuo kalendoriaus; data kairėje */
 #calYvBtn{display:none}
 body.calOn:not(.wide) #calYvBtn{display:inline-flex}
-#calYvBtn .i1{display:none}   /* spalva nekinta – keičiasi ikona: mėnesyje 4 kvadratai (į metus), metuose didelis kvadratas (į mėnesį) */
-#calYvBtn.on .i4{display:none}
-#calYvBtn.on .i1{display:block}
+#calYvBtn .i4{display:none}   /* spalva nekinta – keičiasi ikona: mėnesyje didelis kvadratas, metuose 4 kvadratai */
+#calYvBtn.on .i1{display:none}
+#calYvBtn.on .i4{display:block}
 @media (max-width:760px){#calView .calInfo,#calView .calInfo:empty{text-align:left}}
 </style>
 </head>
@@ -750,7 +750,7 @@ body.calOn:not(.wide) #calYvBtn{display:inline-flex}
 var TEMPLATE='<!doctype html>\n'+document.documentElement.outerHTML;
 var OPEN='<'+'script id="store" type="application/json">';
 var CLOSE='</'+'script>';
-var VERSION='147';
+var VERSION='148';
 var ITER=310000;
 var PW_MASK=!matchMedia('(pointer:coarse)').matches;   // kompiuteryje slaptažodis vedamas į savą laukelį (ne <input>) – naršyklės jo nesiūlo išsaugoti
 var enc=new TextEncoder(),dec=new TextDecoder();
