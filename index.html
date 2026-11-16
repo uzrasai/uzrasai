@@ -525,7 +525,7 @@ body.wide #calView .calD .w{line-height:1;padding:3px 0}
 #noteGroupRow .calTop .calInfo{position:absolute;right:16px;top:50%;transform:translateY(-50%);max-width:calc(50% - 100px)}
 body.calOn.wide #cardJumpLbl{max-width:calc(50% - 150px)}
 @media (max-width:760px){
- #calView .calTop{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;row-gap:4px}
+ #calView .calTop{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;row-gap:8px;padding-top:0!important}   /* metai per vidurį: 8px iki ikonų ir 8px iki datos */
  #calView .calTop .yrg{grid-column:2}
  #calView .calTop .sp{display:none}
  #calView #calVw{grid-column:3;justify-self:end}
@@ -535,9 +535,9 @@ body.calOn.wide #cardJumpLbl{max-width:calc(50% - 150px)}
 /* telefone – metų / mėnesio perjungimas ikona kairėje nuo kalendoriaus; data kairėje */
 #calYvBtn{display:none}
 body.calOn:not(.wide) #calYvBtn{display:inline-flex}
-#calYvBtn .i4{display:none}   /* spalva nekinta – keičiasi ikona: mėnesyje didelis kvadratas, metuose 4 kvadratai */
-#calYvBtn.on .i1{display:none}
-#calYvBtn.on .i4{display:block}
+#calYvBtn .i1{display:none}   /* spalva nekinta – keičiasi ikona: mėnesyje 4 kvadratai, metuose didelis kvadratas */
+#calYvBtn.on .i4{display:none}
+#calYvBtn.on .i1{display:block}
 @media (max-width:760px){#calView .calInfo,#calView .calInfo:empty{text-align:left}}
 </style>
 </head>
@@ -750,7 +750,7 @@ body.calOn:not(.wide) #calYvBtn{display:inline-flex}
 var TEMPLATE='<!doctype html>\n'+document.documentElement.outerHTML;
 var OPEN='<'+'script id="store" type="application/json">';
 var CLOSE='</'+'script>';
-var VERSION='148';
+var VERSION='149';
 var ITER=310000;
 var PW_MASK=!matchMedia('(pointer:coarse)').matches;   // kompiuteryje slaptažodis vedamas į savą laukelį (ne <input>) – naršyklės jo nesiūlo išsaugoti
 var enc=new TextEncoder(),dec=new TextDecoder();
