@@ -221,7 +221,7 @@ mark{background:#ffe066;color:#000;border-radius:3px;padding:0 1px}
 #status{font-size:13px;color:var(--muted);padding:0 6px}
 #status.dirty{color:var(--danger)}
 #menuBtn{display:none}
-#scroll{flex:1;overflow:auto;position:relative}
+#scroll{flex:1;overflow:auto;position:relative;scrollbar-gutter:stable}   /* vieta slinkties juostai visada – pločiai nekinta */
 /* Telefono stulpelių pločio rankenėlės (tempiamos pirštu) */
 #colHandles .colh{position:absolute;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;touch-action:none;user-select:none;z-index:12;box-shadow:0 2px 6px rgba(0,0,0,.25);cursor:ew-resize}
 #colHandles .colh.on{transform:scale(1.15)}
@@ -416,7 +416,7 @@ body.wide #title{font-size:30px;font-weight:600}
 #calView .calD button.s{outline:3px solid var(--accent);outline-offset:1px;position:relative;z-index:1}
 #calView .calD button:hover{border-color:var(--accent)}
 
-body.wide #calView{padding-bottom:30px}
+body.wide #calView{padding-bottom:12px}
 body.wide #calShow{order:1;margin-left:6px}
 body.wide #calEye{display:none!important}   /* „Rodyti kortelę“ – šalia metų */
 body.wide #calView .calTop .sp{order:2}
@@ -755,7 +755,7 @@ body.calOn:not(.wide) #calYvBtn{display:inline-flex}
 var TEMPLATE='<!doctype html>\n'+document.documentElement.outerHTML;
 var OPEN='<'+'script id="store" type="application/json">';
 var CLOSE='</'+'script>';
-var VERSION='155';
+var VERSION='156';
 var ITER=310000;
 var PW_MASK=!matchMedia('(pointer:coarse)').matches;   // kompiuteryje slaptažodis vedamas į savą laukelį (ne <input>) – naršyklės jo nesiūlo išsaugoti
 var enc=new TextEncoder(),dec=new TextDecoder();
@@ -2458,11 +2458,11 @@ function calFit(){
   $('calView').style.setProperty('--mt',(off+8)+'px');
   return;
  }
- var h=Math.max(480,$('scroll').clientHeight-$('noteGroupRow').offsetHeight-12-42);   // apačioje 30px tarpas; mažiausiai ~24px eilutei (žemame lange – slenkama)
+ var h=Math.max(480,$('scroll').clientHeight-$('noteGroupRow').offsetHeight-12-24);   // apačioje 12px tarpas; mažiausiai ~24px eilutei (žemame lange – slenkama)
  g.style.height=h+'px';
  // dienų skaičių dydis pagal eilutės aukštį, kad niekada neužliptų vienas ant kito
  var rowH=((h-20)/3-30-22-20)/6-4;
- $('calView').style.setProperty('--dfs',Math.max(9,Math.min(15,Math.floor(rowH*0.6)))+'px');
+ $('calView').style.setProperty('--dfs',Math.max(11,Math.min(17,Math.floor(rowH*0.72)))+'px');   // didesni dienų skaičiai
 }
 window.addEventListener('resize',calFit);
 
