@@ -535,7 +535,9 @@ body.calOn.wide #cardJumpLbl{max-width:calc(50% - 150px)}
 /* telefone – metų / mėnesio perjungimas ikona kairėje nuo kalendoriaus; data kairėje */
 #calYvBtn{display:none}
 body.calOn:not(.wide) #calYvBtn{display:inline-flex}
-#calYvBtn.on{background:var(--text);border-color:var(--text);color:var(--panel)}
+#calYvBtn .i1{display:none}   /* spalva nekinta – keičiasi ikona: mėnesyje 4 kvadratai (į metus), metuose didelis kvadratas (į mėnesį) */
+#calYvBtn.on .i4{display:none}
+#calYvBtn.on .i1{display:block}
 @media (max-width:760px){#calView .calInfo,#calView .calInfo:empty{text-align:left}}
 </style>
 </head>
@@ -728,7 +730,7 @@ body.calOn:not(.wide) #calYvBtn{display:inline-flex}
     <button data-op="delTable" class="tdel">Ištrinti lentelę</button>
   </div>
   <div id="scroll">
-   <div id="noteGroupRow"><span id="noteGroupLbl" class="hidden">Grupė: <select id="noteGroup"></select></span><span id="cardJumpLbl" class="hidden"><svg class="cjico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg><select id="cardJump" title="Šio užrašo kortelės pagal indeksą"></select></span><button type="button" id="calYvBtn" title="Metai / mėnuo"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg></button><button type="button" id="calBtn" title="Kalendorius: kortelės pagal datas"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg></button></div>
+   <div id="noteGroupRow"><span id="noteGroupLbl" class="hidden">Grupė: <select id="noteGroup"></select></span><span id="cardJumpLbl" class="hidden"><svg class="cjico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg><select id="cardJump" title="Šio užrašo kortelės pagal indeksą"></select></span><button type="button" id="calYvBtn" title="Metai / mėnuo"><svg class="ico i4" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg><svg class="ico i1" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></button><button type="button" id="calBtn" title="Kalendorius: kortelės pagal datas"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg></button></div>
    <div id="doc">
     <textarea id="title" rows="1" placeholder="Pavadinimas" spellcheck="false" autocorrect="off"></textarea>
     <div id="editor" contenteditable="true" spellcheck="false" autocorrect="off"></div>
@@ -748,7 +750,7 @@ body.calOn:not(.wide) #calYvBtn{display:inline-flex}
 var TEMPLATE='<!doctype html>\n'+document.documentElement.outerHTML;
 var OPEN='<'+'script id="store" type="application/json">';
 var CLOSE='</'+'script>';
-var VERSION='146';
+var VERSION='147';
 var ITER=310000;
 var PW_MASK=!matchMedia('(pointer:coarse)').matches;   // kompiuteryje slaptažodis vedamas į savą laukelį (ne <input>) – naršyklės jo nesiūlo išsaugoti
 var enc=new TextEncoder(),dec=new TextDecoder();
