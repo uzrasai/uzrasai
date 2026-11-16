@@ -397,13 +397,15 @@ body.wide #title{font-size:30px;font-weight:600}
 #calView .calTop .yr{font-size:20px;font-weight:600;min-width:56px;text-align:center}
 #calView .calTop .nav{width:36px;min-height:36px;padding:0;font-size:18px;color:var(--muted)}
 #calView .calTop .sp{flex:1}
+#calVw{display:none}
+@media (max-width:760px){#calVw{display:inline-flex}#calView .calTop{gap:6px}#calView .calTop>button:not(.nav){min-height:36px;padding:6px 10px;font-size:14px}#calView .calTop .yr{font-size:18px;min-width:48px}}
 #calView .calInfo{width:100%;font-size:14px;color:var(--muted);min-height:1.4em}
 #calView .calInfo b{color:var(--text);font-weight:600}
 #calView .calGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
 #calView .calM{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.07);padding:10px 10px 12px}
 #calView .calM h4{margin:0 0 6px;font-size:14px;font-weight:700}
 #calView .calM h4 span{font-weight:400;color:var(--muted);font-size:12px}
-#calView .calD{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+#calView .calD{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
 #calView .calD .w{font-size:11px;color:var(--muted);text-align:center;padding-bottom:2px}
 #calView .calD button{aspect-ratio:1/.85;min-height:0;padding:0;border:1px solid var(--line);border-radius:6px;font-size:13px;background:var(--panel);color:var(--text)}
 #calView .calD button.we{color:var(--muted)}
@@ -412,7 +414,7 @@ body.wide #title{font-size:30px;font-weight:600}
 #calView .calD button.s{outline:3px solid var(--accent);outline-offset:1px;position:relative;z-index:1}
 #calView .calD button:hover{border-color:var(--accent)}
 
-body.wide #calView{padding-bottom:16px}
+body.wide #calView{padding-bottom:30px}
 body.wide #calView .calGrid{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:10px}
 body.wide #calView .calM{display:flex;flex-direction:column;min-height:0;padding:8px 10px 10px}
 body.wide #calView .calM h4{font-size:15px}
@@ -426,7 +428,19 @@ body.wide #calView .calD button{aspect-ratio:auto;height:100%;font-size:clamp(11
  #calView .calD{flex:1;min-height:0;gap:5px;grid-template-rows:auto repeat(6,minmax(0,1fr))}
  #calView .calD .w{font-size:13px}
  #calView .calD button{aspect-ratio:auto;height:100%;font-size:17px;border-radius:8px}
- body.calOn #scroll{scroll-snap-type:y proximity}
+ body.calOn:not(.calYV) #scroll{scroll-snap-type:y proximity}
+ #calView .calInfo:empty{display:none}
+ /* visų metų vaizdas telefone: 2 stulpeliai, skaičiai be rėmelių */
+ #calView.yv .calGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ #calView.yv .calM{height:auto;padding:10px 8px;scroll-snap-align:none}
+ #calView.yv .calM h4{font-size:16px;margin-bottom:6px;cursor:pointer}
+ #calView.yv .calD{gap:2px 1px;grid-template-rows:none}
+ #calView.yv .calD .w{font-size:11px}
+ #calView.yv .calD button{aspect-ratio:1/1;height:auto;font-size:13px;border:none;border-radius:8px;background:none}
+ #calView.yv .calD button.has{font-weight:700}
+ #calView.yv .calD button.s{outline-width:2px;outline-offset:0}
+ #calView.yv .calD button.t{box-shadow:inset 0 0 0 1.5px #6d5bd0}
+ body.calOn #calView.yv~*{}
 }
 </style>
 </head>
@@ -637,7 +651,7 @@ body.wide #calView .calD button{aspect-ratio:auto;height:100%;font-size:clamp(11
 var TEMPLATE='<!doctype html>\n'+document.documentElement.outerHTML;
 var OPEN='<'+'script id="store" type="application/json">';
 var CLOSE='</'+'script>';
-var VERSION='126';
+var VERSION='129';
 var ITER=310000;
 var PW_MASK=!matchMedia('(pointer:coarse)').matches;   // kompiuteryje slaptažodis vedamas į savą laukelį (ne <input>) – naršyklės jo nesiūlo išsaugoti
 var enc=new TextEncoder(),dec=new TextDecoder();
@@ -2173,7 +2187,7 @@ function buildCardJump(){
 }
 
 /* ---------- Kalendoriaus vaizdas: užrašo kortelės pagal datas ---------- */
-var calMode=false,calYear=null,calSel=null;
+var calMode=false,calYear=null,calSel=null,calYV=!!lsGet('uzrasai-calyv');   // calYV – telefone visų metų vaizdas
 var CAL_M=['Sausis','Vasaris','Kovas','Balandis','Gegužė','Birželis','Liepa','Rugpjūtis','Rugsėjis','Spalis','Lapkritis','Gruodis'];
 var CAL_MG=['sausio','vasario','kovo','balandžio','gegužės','birželio','liepos','rugpjūčio','rugsėjo','spalio','lapkričio','gruodžio'];
 var CAL_WD=['sekmadienis','pirmadienis','antradienis','trečiadienis','ketvirtadienis','penktadienis','šeštadienis'];
@@ -2203,12 +2217,13 @@ function setCalMode(on){
  if(on){renderCal();if(!isWide())calScrollTo();}
 }
 // Atidarius kalendorių – nuslenkam iki aktualaus mėnesio (pažymėtos dienos, šio mėnesio arba pirmo su kortelėmis)
-function calScrollTo(){
+function calScrollTo(force){
  var now=new Date(),mo=-1;
- if(calSel&&+calSel.slice(0,4)===calYear)mo=+calSel.slice(5,7)-1;
+ if(force!=null)mo=force;
+ else if(calSel&&+calSel.slice(0,4)===calYear)mo=+calSel.slice(5,7)-1;
  else if(calYear===now.getFullYear())mo=now.getMonth();
  else{var k=Object.keys(calCards()).sort().filter(function(x){return +x.slice(0,4)===calYear;})[0];if(k)mo=+k.slice(5,7)-1;}
- var el=mo>0?$('calView').querySelectorAll('.calM')[mo]:null;if(!el)return;
+ var el=mo>0?$('calView').querySelectorAll('.calM')[mo]:null;if(!el){$('scroll').scrollTop=0;return;}
  var sc=$('scroll'),top=el.getBoundingClientRect().top-sc.getBoundingClientRect().top+sc.scrollTop;
  sc.scrollTop=Math.max(0,top-$('noteGroupRow').offsetHeight-$('calView').querySelector('.calTop').offsetHeight-8);
 }
@@ -2219,7 +2234,7 @@ function renderCal(){
   calYear=(!yrs.length||yrs.indexOf(ty)>=0)?ty:(yrs.filter(function(y){return y>ty;})[0]||yrs[yrs.length-1]);
  }
  var h='<div class="calTop"><button type="button" class="nav" data-y="-1" title="Ankstesni metai">‹</button><span class="yr">'+calYear+'</span><button type="button" class="nav" data-y="1" title="Kiti metai">›</button>'+
-  '<span class="sp"></span><button type="button" id="calShow" class="hidden">Rodyti kortelę</button>'+
+  '<span class="sp"></span><button type="button" id="calShow" class="hidden">Rodyti kortelę</button><button type="button" id="calVw">'+(calYV?'Mėnuo':'Metai')+'</button>'+
   '<div class="calInfo" id="calInfo"></div></div><div class="calGrid">';
  for(var mo=0;mo<12;mo++){
   var first=new Date(calYear,mo,1),off=(first.getDay()+6)%7,days=new Date(calYear,mo+1,0).getDate(),cnt=0,cells='';
@@ -2230,10 +2245,11 @@ function renderCal(){
    if(list){cnt++;c+=' has';st=' style="background:'+dayBg(list)+'"';}
    cells+='<button type="button" class="'+c.trim()+'" data-v="'+v+'"'+st+(list?' title="'+esc(list.map(function(x){return x.t;}).join(', '))+'"':'')+'>'+d+'</button>';
   }
-  h+='<div class="calM"><h4>'+CAL_M[mo]+(cnt?' <span>· '+cnt+' d.</span>':'')+'</h4><div class="calD">'+
+  h+='<div class="calM"><h4 data-mo="'+mo+'">'+CAL_M[mo]+(cnt?' <span>· '+cnt+' d.</span>':'')+'</h4><div class="calD">'+
    ['P','A','T','K','P','Š','S'].map(function(w){return '<span class="w">'+w+'</span>';}).join('')+cells+'</div></div>';
  }
  $('calView').innerHTML=h+'</div>';
+ $('calView').classList.toggle('yv',calYV&&!isWide());document.body.classList.toggle('calYV',calYV&&!isWide());
  $('calView').querySelector('.calTop').style.top=$('noteGroupRow').offsetHeight+'px';   // lieka po kortelių paieškos eilute
  calInfo(m);
  calFit();
@@ -2241,13 +2257,14 @@ function renderCal(){
 function calInfo(m){
  m=m||calCards();
  var info=$('calInfo'),list=calSel?m[calSel]:null;
- if(!calSel){info.textContent='Pažymėkite dieną ir paspauskite ⊞ – bus sukurta tos dienos kortelė.';}
+ if(!calSel){info.textContent=isWide()?'Pažymėkite dieną ir paspauskite ⊞ – bus sukurta tos dienos kortelė.':'';}   // telefone be instrukcijos
  else{
   var d=new Date(calSel+'T12:00');
   info.innerHTML='<b>'+d.getFullYear()+' m. '+CAL_MG[d.getMonth()]+' '+d.getDate()+' d., '+CAL_WD[d.getDay()]+'</b>'+
    (list?' · '+esc(list.map(function(x){return x.t;}).join(', ')):' · kortelių nėra');
  }
  $('calShow').classList.toggle('hidden',!list);
+ if(!isWide())calFit();
 }
 function flashCard(el){
  el.scrollIntoView({block:'center',behavior:'smooth'});
@@ -2264,8 +2281,11 @@ function insertCardByDate(el,date){
 }
 $('calBtn').onclick=function(){if(cur)setCalMode(!calMode);};
 $('calView').addEventListener('click',async function(e){
+ var hm=e.target.closest('h4[data-mo]');
+ if(hm&&calYV&&!isWide()){calYV=false;lsSet('uzrasai-calyv',null);var mo=+hm.dataset.mo;renderCal();calScrollTo(mo);return;}   // metų vaizde – atidaryti mėnesį
  var b=e.target.closest('button');if(!b)return;
  if(b.dataset.y){calYear+=+b.dataset.y;renderCal();return;}
+ if(b.id==='calVw'){calYV=!calYV;lsSet('uzrasai-calyv',calYV?1:null);renderCal();if(calYV)$('scroll').scrollTop=0;else calScrollTo();return;}
  if(b.dataset.v){
   var was=$('calView').querySelector('.calD button.s');if(was)was.classList.remove('s');
   calSel=b.dataset.v;b.classList.add('s');
@@ -2293,7 +2313,7 @@ function calFit(){
   $('calView').style.setProperty('--mt',(off+8)+'px');
   return;
  }
- var h=$('scroll').clientHeight-$('noteGroupRow').offsetHeight-t.offsetHeight-12-16;
+ var h=$('scroll').clientHeight-$('noteGroupRow').offsetHeight-t.offsetHeight-12-42;   // apačioje 30px tarpas
  g.style.height=Math.max(480,h)+'px';
 }
 window.addEventListener('resize',calFit);
