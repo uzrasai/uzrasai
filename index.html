@@ -309,7 +309,9 @@ body.nav3 #list li.grp:hover .grip{display:inline}
 body.nav3 #list li.grp:hover .cnt{display:none}
 body.nav3 #sideBottom{border-top:1px solid var(--line);gap:6px}
 body.nav3 #sideBottom button{min-height:34px;padding:5px 10px;font-size:14px;background:var(--panel)}
-body.wide #bar{border-bottom:1px solid var(--line);padding:6px 12px}
+body.wide #bar{padding:6px 12px}
+body.nav3 #bar{border-bottom:none}
+body.nav3 #noteGroupRow{box-shadow:none}
 body.nav3 #scroll,body.nav3 #noteGroupRow{background:var(--panel)}
 body.wide #doc{max-width:860px;padding:26px 32px 120px}
 body.wide #title{font-size:30px;font-weight:600}
@@ -569,7 +571,7 @@ body.wide #title{font-size:30px;font-weight:600}
 var TEMPLATE='<!doctype html>\n'+document.documentElement.outerHTML;
 var OPEN='<'+'script id="store" type="application/json">';
 var CLOSE='</'+'script>';
-var VERSION='119';
+var VERSION='120';
 var ITER=310000;
 var PW_MASK=!matchMedia('(pointer:coarse)').matches;   // kompiuteryje slaptažodis vedamas į savą laukelį (ne <input>) – naršyklės jo nesiūlo išsaugoti
 var enc=new TextEncoder(),dec=new TextDecoder();
