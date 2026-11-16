@@ -389,8 +389,8 @@ body.wide #title{font-size:30px;font-weight:600}
 #calPop .cf button{padding:6px 10px;color:var(--accent);font-weight:600}
 
 /* Kalendoriaus vaizdas */
-#calBtn{flex:none;width:38px;min-height:36px;padding:0;border-radius:8px;background:var(--bg);display:inline-flex;align-items:center;justify-content:center;color:var(--muted)}
-#calBtn .ico{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#calBtn,#calEye{flex:none;width:38px;min-height:36px;padding:0;border-radius:8px;background:var(--bg);display:inline-flex;align-items:center;justify-content:center;color:var(--muted)}
+#calBtn .ico,#calEye .ico{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 #calBtn:hover{color:var(--text)}
 #calBtn.on{background:var(--accent);border-color:var(--accent);color:#fff}
 #calView{padding:12px 20px 120px}
@@ -417,7 +417,8 @@ body.wide #title{font-size:30px;font-weight:600}
 #calView .calD button:hover{border-color:var(--accent)}
 
 body.wide #calView{padding-bottom:30px}
-body.wide #calShow{order:1;margin-left:6px}   /* „Rodyti kortelę“ – šalia metų */
+body.wide #calShow{order:1;margin-left:6px}
+body.wide #calEye{display:none!important}   /* „Rodyti kortelę“ – šalia metų */
 body.wide #calView .calTop .sp{order:2}
 body.wide #calView .calInfo{order:3}
 body.wide #calView .calGrid{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:10px}
@@ -452,6 +453,7 @@ body.wide #calView .calD button{aspect-ratio:auto;height:100%;font-size:clamp(11
 /* ---------- Telefono kalendorius pagal pavyzdį: pilkas fonas, balti langeliai ---------- */
 @media (max-width:760px){
  body.calOn #scroll,body.calOn #noteGroupRow,body.calOn #calView .calTop{background:var(--bg)}
+ #calShow{display:none!important}   /* telefone – akies ikona šalia kalendoriaus */
  #calView{padding-top:0}   /* juosta visada tiesiai po paieška (mėnuo ir metai vienodai) */
  /* mėnuo */
  #calView.mv .calM{background:none;border:none;box-shadow:none;padding:4px 0 0}
@@ -672,7 +674,7 @@ body.wide #calView .calD button{aspect-ratio:auto;height:100%;font-size:clamp(11
     <button data-op="delTable" class="tdel">Ištrinti lentelę</button>
   </div>
   <div id="scroll">
-   <div id="noteGroupRow"><span id="noteGroupLbl" class="hidden">Grupė: <select id="noteGroup"></select></span><span id="cardJumpLbl" class="hidden"><svg class="cjico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg><select id="cardJump" title="Šio užrašo kortelės pagal indeksą"></select></span><button type="button" id="calBtn" title="Kalendorius: kortelės pagal datas"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg></button></div>
+   <div id="noteGroupRow"><span id="noteGroupLbl" class="hidden">Grupė: <select id="noteGroup"></select></span><span id="cardJumpLbl" class="hidden"><svg class="cjico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg><select id="cardJump" title="Šio užrašo kortelės pagal indeksą"></select></span><button type="button" id="calEye" class="hidden" title="Rodyti kortelę"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/></svg></button><button type="button" id="calBtn" title="Kalendorius: kortelės pagal datas"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg></button></div>
    <div id="doc">
     <textarea id="title" rows="1" placeholder="Pavadinimas" spellcheck="false" autocorrect="off"></textarea>
     <div id="editor" contenteditable="true" spellcheck="false" autocorrect="off"></div>
@@ -692,7 +694,7 @@ body.wide #calView .calD button{aspect-ratio:auto;height:100%;font-size:clamp(11
 var TEMPLATE='<!doctype html>\n'+document.documentElement.outerHTML;
 var OPEN='<'+'script id="store" type="application/json">';
 var CLOSE='</'+'script>';
-var VERSION='135';
+var VERSION='136';
 var ITER=310000;
 var PW_MASK=!matchMedia('(pointer:coarse)').matches;   // kompiuteryje slaptažodis vedamas į savą laukelį (ne <input>) – naršyklės jo nesiūlo išsaugoti
 var enc=new TextEncoder(),dec=new TextDecoder();
@@ -2198,7 +2200,7 @@ async function endGroupDrag(e){
 function scheduleList(){clearTimeout(listTimer);listTimer=setTimeout(renderList,400);}
 
 function openNote(n){
- calMode=false;calSel=null;document.body.classList.remove('calOn');$('calView').classList.add('hidden');$('calBtn').classList.remove('on');
+ calMode=false;calSel=null;document.body.classList.remove('calOn');$('calEye').classList.add('hidden');$('calView').classList.add('hidden');$('calBtn').classList.remove('on');
  cur=n;savedRange=null;
  $('doc').classList.toggle('hidden',!n);$('noteGroupRow').classList.toggle('hidden',!n);$('empty').classList.toggle('hidden',!!n);
  $('empty').textContent=isWide()?(data.notes.length?'Pasirinkite užrašą sąraše.':'Užrašų dar nėra. Spauskite „+ Naujas“.'):(filter==='tree'?
@@ -2250,7 +2252,7 @@ function dayBg(list){
  return 'linear-gradient(135deg,'+st.join(',')+')';
 }
 function setCalMode(on){
- calMode=on;document.body.classList.toggle('calOn',on);
+ calMode=on;document.body.classList.toggle('calOn',on);if(!on)$('calEye').classList.add('hidden');
  $('doc').classList.toggle('hidden',on||!cur);$('calView').classList.toggle('hidden',!on);
  $('calBtn').classList.toggle('on',on);$('calBtn').title=on?'Grįžti į užrašą':'Kalendorius: kortelės pagal datas';
  document.querySelectorAll('.ed').forEach(function(b){b.disabled=(on&&b.id!=='insBtn')||!cur;});
@@ -2315,7 +2317,7 @@ function calInfo(m){
   info.innerHTML='<b>'+d.getFullYear()+' m. '+CAL_MG[d.getMonth()]+' '+d.getDate()+' d., '+CAL_WD[d.getDay()]+'</b>'+
    (list?' · '+esc(list.map(function(x){return x.t;}).join(', ')):' · kortelių nėra');
  }
- $('calShow').classList.toggle('hidden',!list);
+ $('calShow').classList.toggle('hidden',!list);$('calEye').classList.toggle('hidden',!list||!calMode);
  calFit();
 }
 function flashCard(el){
@@ -2332,6 +2334,7 @@ function insertCardByDate(el,date){
  if(!el.nextSibling){var nx=document.createElement('div');nx.innerHTML='<br>';editor.appendChild(nx);}
 }
 $('calBtn').onclick=function(){if(cur)setCalMode(!calMode);};
+$('calEye').onclick=function(){var l=calCards()[calSel];if(l){setCalMode(false);flashCard(l[0].el);}};
 $('calView').addEventListener('click',async function(e){
  var hm=e.target.closest('h4[data-mo]');
  if(hm&&calYV&&!isWide()){calYV=false;lsSet('uzrasai-calyv',null);var mo=+hm.dataset.mo;renderCal();calScrollTo(mo);return;}   // metų vaizde – atidaryti mėnesį
