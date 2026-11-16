@@ -213,7 +213,7 @@ mark{background:#ffe066;color:#000;border-radius:3px;padding:0 1px}
 #cardJump{padding-left:36px!important}
 #cardJumpLbl.hidden{display:none}
 #cardJump{width:100%;max-width:360px;min-width:0}
-#imgSizeLbl{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+#imgSizeLbl{display:none!important}   /* pasirenkama per ⚙ → Paveikslėlių dydis */
 #imgSize{font:inherit;font-size:14px;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-height:36px}
 #main{flex:1;display:flex;flex-direction:column;min-width:0;position:relative}
 #bar{display:flex;align-items:center;gap:2px;padding:6px 8px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
@@ -410,6 +410,15 @@ body.wide #title{font-size:30px;font-weight:600}
 #calView .calD button.t{box-shadow:inset 0 0 0 2px #6d5bd0}
 #calView .calD button.s{outline:3px solid var(--accent);outline-offset:1px;position:relative;z-index:1}
 #calView .calD button:hover{border-color:var(--accent)}
+
+body.wide #calView{padding-bottom:16px}
+body.wide #calView .calGrid{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:10px}
+body.wide #calView .calM{display:flex;flex-direction:column;min-height:0;padding:8px 10px 10px}
+body.wide #calView .calM h4{font-size:15px}
+body.wide #calView .calD{flex:1;min-height:0;grid-template-rows:auto repeat(6,minmax(0,1fr))}
+body.wide #calView .calD{gap:4px}
+body.wide #calView .calD button{aspect-ratio:auto;height:100%;font-size:clamp(11px,.9vw,15px);border-radius:5px}
+@media (max-width:760px){#calView .calGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}#calView .calM{padding:8px 6px}#calView .calD{gap:2px}#calView .calD button{aspect-ratio:1/1;font-size:12px;border-radius:5px}}
 </style>
 </head>
 <body>
@@ -581,6 +590,7 @@ body.wide #title{font-size:30px;font-weight:600}
      <button id="dbxBtn" role="menuitem">Dropbox…</button>
      <button id="dkBtn" role="menuitem">Įrenginio raktas…</button>
      <button id="fileBtn" role="menuitem">Atsisiųsti failą (kopija)</button>
+     <button id="imgPxBtn" role="menuitem">Paveikslėlių dydis…</button>
      <button id="pwBtn" role="menuitem">Keisti slaptažodį</button>
      <button id="lockNowBtn" role="menuitem">Užrakinti</button>
     </div>
@@ -618,7 +628,7 @@ body.wide #title{font-size:30px;font-weight:600}
 var TEMPLATE='<!doctype html>\n'+document.documentElement.outerHTML;
 var OPEN='<'+'script id="store" type="application/json">';
 var CLOSE='</'+'script>';
-var VERSION='122';
+var VERSION='123';
 var ITER=310000;
 var PW_MASK=!matchMedia('(pointer:coarse)').matches;   // kompiuteryje slaptažodis vedamas į savą laukelį (ne <input>) – naršyklės jo nesiūlo išsaugoti
 var enc=new TextEncoder(),dec=new TextDecoder();
@@ -1069,6 +1079,7 @@ function closeIns(){$('insMenu').classList.add('hidden');}
 // ⊞ – pasirinkimo langas (patikimiau nei iškylantis meniu; veikia visose naršyklėse)
 $('insBtn').onclick=async function(e){
  e.stopPropagation();if(!cur)return;closeGear();closeColor();closeIns();
+ if(calMode){calAddCard();return;}   // kalendoriuje – kortelė pažymėtai dienai
  var r=await dialog({title:'Įterpti',text:'Ką įterpti į užrašą?',buttons:[{l:'Atšaukti',v:null},{l:'Lentelė',v:'tbl'},{l:'Kortelė',v:'card',c:'primary'}]});
  if(!r)return;
  if(r.btn==='tbl')$('tblBtn').onclick();else $('cardBtn').onclick();
@@ -2178,9 +2189,10 @@ function setCalMode(on){
  calMode=on;
  $('doc').classList.toggle('hidden',on||!cur);$('calView').classList.toggle('hidden',!on);
  $('calBtn').classList.toggle('on',on);$('calBtn').title=on?'Grįžti į užrašą':'Kalendorius: kortelės pagal datas';
- document.querySelectorAll('.ed').forEach(function(b){b.disabled=on||!cur;});
+ document.querySelectorAll('.ed').forEach(function(b){b.disabled=(on&&b.id!=='insBtn')||!cur;});
+ $('insBtn').title=on?'Nauja kortelė pažymėtai dienai':'Įterpti lentelę arba kortelę';
  $('scroll').scrollTop=0;
- if(on){renderCal();calScrollTo();}
+ if(on){renderCal();if(!isWide())calScrollTo();}
 }
 // Atidarius kalendorių – nuslenkam iki aktualaus mėnesio (pažymėtos dienos, šio mėnesio arba pirmo su kortelėmis)
 function calScrollTo(){
@@ -2199,7 +2211,7 @@ function renderCal(){
   calYear=(!yrs.length||yrs.indexOf(ty)>=0)?ty:(yrs.filter(function(y){return y>ty;})[0]||yrs[yrs.length-1]);
  }
  var h='<div class="calTop"><button type="button" class="nav" data-y="-1" title="Ankstesni metai">‹</button><span class="yr">'+calYear+'</span><button type="button" class="nav" data-y="1" title="Kiti metai">›</button>'+
-  '<span class="sp"></span><button type="button" id="calShow" class="hidden">Rodyti kortelę</button><button type="button" id="calAdd" class="primary">+ Pridėti</button>'+
+  '<span class="sp"></span><button type="button" id="calShow" class="hidden">Rodyti kortelę</button>'+
   '<div class="calInfo" id="calInfo"></div></div><div class="calGrid">';
  for(var mo=0;mo<12;mo++){
   var first=new Date(calYear,mo,1),off=(first.getDay()+6)%7,days=new Date(calYear,mo+1,0).getDate(),cnt=0,cells='';
@@ -2216,11 +2228,12 @@ function renderCal(){
  $('calView').innerHTML=h+'</div>';
  $('calView').querySelector('.calTop').style.top=$('noteGroupRow').offsetHeight+'px';   // lieka po kortelių paieškos eilute
  calInfo(m);
+ calFit();
 }
 function calInfo(m){
  m=m||calCards();
  var info=$('calInfo'),list=calSel?m[calSel]:null;
- if(!calSel){info.textContent='Pažymėkite dieną, tada „+ Pridėti“ sukurs tos dienos kortelę.';}
+ if(!calSel){info.textContent='Pažymėkite dieną ir paspauskite ⊞ – bus sukurta tos dienos kortelė.';}
  else{
   var d=new Date(calSel+'T12:00');
   info.innerHTML='<b>'+d.getFullYear()+' m. '+CAL_MG[d.getMonth()]+' '+d.getDate()+' d., '+CAL_WD[d.getDay()]+'</b>'+
@@ -2251,17 +2264,25 @@ $('calView').addEventListener('click',async function(e){
   calInfo();return;
  }
  if(b.id==='calShow'){var l=calCards()[calSel];if(l){setCalMode(false);flashCard(l[0].el);}return;}
- if(b.id==='calAdd'){
-  if(!calSel){$('calInfo').innerHTML='<b>Pirma pažymėkite dieną.</b>';return;}
-  var r=await cardDialog({type:'hotel',date:calSel},false);
-  if(!r||r.act!=='save')return;
-  var tmp=document.createElement('div');tmp.innerHTML=cardHTML(r.data);
-  insertCardByDate(tmp.firstChild,r.data.date);
-  editorChanged();
-  if(r.data.date){calSel=r.data.date;calYear=+r.data.date.slice(0,4);}
-  renderCal();
- }
 });
+async function calAddCard(){
+ if(!calSel){$('calInfo').innerHTML='<b>Pirma pažymėkite dieną, tada ⊞.</b>';return;}
+ var r=await cardDialog({type:'hotel',date:calSel},false);
+ if(!r||r.act!=='save')return;
+ var tmp=document.createElement('div');tmp.innerHTML=cardHTML(r.data);
+ insertCardByDate(tmp.firstChild,r.data.date);
+ editorChanged();
+ if(r.data.date){calSel=r.data.date;calYear=+r.data.date.slice(0,4);}
+ renderCal();
+}
+// Kompiuteryje 12 mėnesių (3 eilės po 4) ištempiami per visą laisvą aukštį
+function calFit(){
+ if(!calMode)return;var g=$('calView').querySelector('.calGrid'),t=$('calView').querySelector('.calTop');if(!g||!t)return;
+ if(!isWide()){g.style.height='';return;}
+ var h=$('scroll').clientHeight-$('noteGroupRow').offsetHeight-t.offsetHeight-12-16;
+ g.style.height=Math.max(480,h)+'px';
+}
+window.addEventListener('resize',calFit);
 
 $('cardJump').onchange=function(){
  var el=editor.querySelectorAll('.ncard')[parseInt(this.value,10)];if(!el)return;
@@ -2410,6 +2431,14 @@ async function insertImages(files){
  }
  editorChanged();
 }
+$('imgPxBtn').onclick=async function(){
+ closeDrawer();if(!data)return;
+ var r=await dialog({title:'Paveikslėlių dydis',text:'Didžiausia įkeliamų ir įklijuojamų paveikslėlių kraštinė. Mažiau – mažesnis failas, daugiau – ryškesni paveikslėliai.',
+  select:{label:'Dydis',options:[['400','400 px'],['600','600 px'],['800','800 px'],['1000','1000 px'],['1400','1400 px']],value:String(data.imgMax||400)},
+  buttons:[{l:'Atšaukti',v:null},{l:'Gerai',v:'ok',c:'primary'}]});
+ if(!r||String(data.imgMax||400)===r.sel)return;
+ $('imgSize').value=r.sel;$('imgSize').onchange();
+};
 $('imgSize').onchange=function(){
  if(!data)return;
  data.imgMax=parseInt(this.value,10)||400;
