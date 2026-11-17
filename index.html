@@ -548,6 +548,11 @@ body.calOn:not(.wide) #calYvBtn{display:inline-flex}
 #calYvBtn.on .i4{display:none}
 #calYvBtn.on .i1{display:block}
 @media (max-width:760px){#calView .calInfo,#calView .calInfo:empty{text-align:left;line-height:1.15;min-height:1.15em}}   /* be tuščios vietos virš teksto – metai matomai per vidurį */
+
+/* užrašų tempimas */
+#notes li{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#notes li.ndragging{opacity:.55;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+body.ndrag,body.ndrag *{cursor:grabbing!important}
 </style>
 </head>
 <body>
@@ -759,7 +764,7 @@ body.calOn:not(.wide) #calYvBtn{display:inline-flex}
 var TEMPLATE='<!doctype html>\n'+document.documentElement.outerHTML;
 var OPEN='<'+'script id="store" type="application/json">';
 var CLOSE='</'+'script>';
-var VERSION='157';
+var VERSION='159';
 var ITER=310000;
 var PW_MASK=!matchMedia('(pointer:coarse)').matches;   // kompiuteryje slaptažodis vedamas į savą laukelį (ne <input>) – naršyklės jo nesiūlo išsaugoti
 var enc=new TextEncoder(),dec=new TextDecoder();
@@ -915,7 +920,13 @@ function openApp(){
  openNote(n||visible()[0]||null);
  showSaved();
 }
-function sorted(){return data.notes.slice().sort(function(a,b){return b.updated-a.updated;});}
+// Tvarka: pertempti užrašai turi „ord“ (rankinė tvarka); nauji (be „ord“) – viršuje, naujausi pirmi
+function sorted(){return data.notes.slice().sort(function(a,b){
+ var ao=a.ord,bo=b.ord;
+ if(ao==null&&bo==null)return b.updated-a.updated;
+ if(ao==null)return -1;if(bo==null)return 1;
+ return ao-bo;
+});}
 
 /* ---------- Grupės ---------- */
 var filter='tree'; // 'tree' (medis, numatytas) | 'all' | 'none' | grupės id
@@ -1198,7 +1209,9 @@ function normalizeImport(j){
    if(!f){f={id:newId(),name:String(n.groupName)};groups.push(f);}
    g=f.id;
   }
-  return {id:n.id?String(n.id):newId(),title:String(n.title||''),html:sanitizeNoteHTML(String(n.html||'')),updated:isNaN(up)?Date.now():up,group:g};
+  var r={id:n.id?String(n.id):newId(),title:String(n.title||''),html:sanitizeNoteHTML(String(n.html||'')),updated:isNaN(up)?Date.now():up,group:g};
+  if(typeof n.ord==='number'&&isFinite(n.ord))r.ord=n.ord;   // rankinė tvarka
+  return r;
  });
  return {groups:groups,notes:notes};
 }
@@ -1810,7 +1823,7 @@ $('importInput').onchange=async function(){
   var ok=await askConfirm('Pakeisti visus užrašus?','Dabartiniai užrašai ('+data.notes.length+') ir grupės ('+data.groups.length+') bus pakeisti. Jei suklysite – neišsaugokite failo ir užrakinkite.','Pakeisti',true);
   if(!ok)return;
   data.groups=imp.groups.map(function(g){var o={id:g.id,name:g.name};if(g.parent)o.parent=g.parent;if(typeof g.order==='number')o.order=g.order;return o;});
-  data.notes=imp.notes.map(function(n){var o={id:n.id,title:n.title,html:n.html,updated:n.updated};if(n.group)o.group=n.group;return o;});
+  data.notes=imp.notes.map(function(n){var o={id:n.id,title:n.title,html:n.html,updated:n.updated};if(n.group)o.group=n.group;if(n.ord!=null)o.ord=n.ord;return o;});
   data.collapsed={};added=data.notes.length;fixGroups();ensureOrder();
  }else{
   // grupės: tėvai pirmiau vaikų; atitikmuo pagal id, tada pagal pavadinimą toje pačioje tėvinėje grupėje
@@ -1953,7 +1966,7 @@ function exportJSON(){
  return asciiJSON({app:'Uzrasai',appVersion:VERSION,exported:new Date().toISOString(),
   groups:sortedGroups().filter(function(g){return scopeGroup(g)||need[g.id];}).map(function(g){return {id:g.id,name:g.name,parent:parentOf(g.id),order:g.order,path:groupPath(g.id)};}),
   notes:ns.map(function(n){return {id:n.id,title:n.title||'',group:noteGroupId(n)||null,groupName:groupName(noteGroupId(n))||null,
-   updated:new Date(n.updated).toISOString(),html:n.html||''};})});
+   updated:new Date(n.updated).toISOString(),ord:n.ord!=null?n.ord:undefined,html:n.html||''};})});
 }
 // JSON be lietuviškų (ir kitų ne ASCII) raidžių: ž -> \u017e. Importuojant JSON.parse jas atkuria tiksliai
 function asciiJSON(o){return JSON.stringify(o,null,2).replace(/[\u007f-\uffff]/g,function(c){return '\\u'+('000'+c.charCodeAt(0).toString(16)).slice(-4);});}
@@ -2092,6 +2105,70 @@ function fmtList(t){
   return d.toLocaleDateString('lt-LT',{year:'numeric',month:'2-digit',day:'2-digit'})+', '+hm;
  }catch(_){return fmt(t);}
 }
+
+/* ---------- Užrašų tempimas sąraše (kompiuteryje – pele, telefone – palaikius pirštu) ---------- */
+var nDrag=null,nDragBlockClick=0;
+function noteDragStart(e,n,li){
+ if(e.button>0||nDrag)return;
+ var touch=e.pointerType!=='mouse';
+ nDrag={n:n,li:li,x0:e.clientX,y0:e.clientY,y:e.clientY,active:false,touch:touch,pid:e.pointerId,line:null,tgt:null,after:false,timer:null};
+ if(touch)nDrag.timer=setTimeout(function(){if(nDrag&&!nDrag.active)noteDragActivate();},450);   // palaikius ~0,5 s
+ document.addEventListener('pointermove',noteDragMove,true);
+ document.addEventListener('pointerup',noteDragEnd,true);
+ document.addEventListener('pointercancel',noteDragEnd,true);
+}
+function noteDragActivate(){
+ var d=nDrag;d.active=true;
+ try{d.li.setPointerCapture(d.pid);}catch(_){}
+ d.li.classList.add('ndragging');document.body.classList.add('ndrag');
+ d.line=document.createElement('div');d.line.id='dropLine';document.body.appendChild(d.line);
+ if(d.touch&&navigator.vibrate)try{navigator.vibrate(15);}catch(_){}
+ noteDragPos(d.y);
+}
+function noteDragMove(e){
+ var d=nDrag;if(!d||e.pointerId!==d.pid)return;
+ var dx=Math.abs(e.clientX-d.x0),dy=Math.abs(e.clientY-d.y0);d.y=e.clientY;
+ if(!d.active){
+  if(d.touch){if(dx>8||dy>8){clearTimeout(d.timer);noteDragCleanup();}return;}   // telefone – braukimas slenka sąrašą
+  if(dy>5)noteDragActivate();else return;
+ }
+ e.preventDefault();noteDragPos(e.clientY);
+}
+function noteDragPos(y){
+ var d=nDrag,box=$('notes'),br=box.getBoundingClientRect();
+ if(y<br.top+36)box.scrollTop-=14;else if(y>br.bottom-36)box.scrollTop+=14;   // automatinis slinkimas
+ var lis=Array.prototype.filter.call(box.children,function(x){return x.dataset.id;}),best=null;
+ for(var i=0;i<lis.length;i++){var r=lis[i].getBoundingClientRect();if(y<r.bottom||i===lis.length-1){best=lis[i];break;}}
+ if(!best){d.tgt=null;d.line.style.display='none';return;}
+ var r2=best.getBoundingClientRect(),after=y>r2.top+r2.height/2;
+ d.tgt=best.dataset.id;d.after=after;
+ var ln=d.line;ln.style.display='block';ln.style.top=(Math.round(after?r2.bottom+2:r2.top-3))+'px';ln.style.left=(r2.left+4)+'px';ln.style.width=(r2.width-8)+'px';
+}
+function noteDragCleanup(){
+ document.removeEventListener('pointermove',noteDragMove,true);
+ document.removeEventListener('pointerup',noteDragEnd,true);
+ document.removeEventListener('pointercancel',noteDragEnd,true);
+ if(nDrag){clearTimeout(nDrag.timer);if(nDrag.line)nDrag.line.remove();nDrag.li.classList.remove('ndragging');try{nDrag.li.releasePointerCapture(nDrag.pid);}catch(_){}}
+ document.body.classList.remove('ndrag');nDrag=null;
+}
+function noteDragEnd(e){
+ var d=nDrag;if(!d||e.pointerId!==d.pid)return;
+ var was=d.active,tgt=d.tgt,after=d.after,n=d.n;
+ noteDragCleanup();
+ if(!was)return;
+ nDragBlockClick=Date.now()+400;   // po tempimo užrašas neatidaromas
+ if(e.type==='pointercancel'||!tgt||tgt===n.id)return;
+ var arr=sorted().filter(function(x){return x!==n;}),ti=-1;
+ for(var i=0;i<arr.length;i++)if(arr[i].id===tgt){ti=i;break;}
+ if(ti<0)return;
+ arr.splice(after?ti+1:ti,0,n);
+ arr.forEach(function(x,i){x.ord=i;});   // nuo šiol – rankinė tvarka
+ setDirty(true);renderList();
+}
+// telefone: kol tempiama – sąrašas neslenka, nerodomas teksto meniu
+$('notes').addEventListener('touchmove',function(e){if(nDrag&&nDrag.active)e.preventDefault();},{passive:false});
+$('notes').addEventListener('contextmenu',function(e){if(nDrag)e.preventDefault();});
+
 function renderWide(q,match){
  var ul=$('list'),col=data.collapsed||(data.collapsed={}),all=data.notes;
  function cnt(id){return all.filter(function(n){var g=noteGroupId(n);return id===null?!g:(!!g&&isUnder(g,id));}).length;}
@@ -2145,7 +2222,9 @@ function renderWide(q,match){
   var gn=(filter!==n.group&&noteGroupId(n))?groupName(noteGroupId(n)):'';
   d.textContent=fmtList(n.updated)+(gn?' · '+gn:'');tx.appendChild(d);
   li.appendChild(tx);
-  li.onclick=function(){openNote(n);setView('note');};
+  li.dataset.id=n.id;
+  li.addEventListener('pointerdown',function(e){noteDragStart(e,n,li);});
+  li.onclick=function(){if(Date.now()<nDragBlockClick)return;openNote(n);setView('note');};
   box.appendChild(li);
  });
  box.scrollTop=top;
@@ -2321,14 +2400,30 @@ function holidaysOf(y){
 }
 function holName(v){return holidaysOf(+v.slice(0,4))[v]||'';}
 function isoD(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+var GROUP_BG={hotel:'#dcfce7',flight:'#dbeafe',transport:'#fef9c3',food:'#ffedd5',activity:'#ede9fe',other:'#f1f5f9'};
+function cardColor(d){return okColor(d.bg)?d.bg:(GROUP_BG[cardType(d.type)[3]]||'#dcfce7');}
+// Visų užrašų kortelės pagal datas: atidaryto – iš redaktoriaus (su neišsaugotais pakeitimais), kitų – iš jų HTML
 function calCards(){
  var m={};
- editor.querySelectorAll('.ncard').forEach(function(el,i){
+ function add(el,i,note){
   var d=cardData(el);if(!/^\d{4}-\d\d-\d\d$/.test(d.date||''))return;
-  var b=el.querySelector('.nc-body'),c=b?getComputedStyle(b).backgroundColor:'#dcfce7';
-  (m[d.date]=m[d.date]||[]).push({el:el,c:c,t:(d.idx?d.idx+' ':'')+(d.title||cardType(d.type)[1])});
+  var t=(d.idx?d.idx+' ':'')+(d.title||cardType(d.type)[1]);
+  (m[d.date]=m[d.date]||[]).push({el:note?null:el,note:note,i:i,c:cardColor(d),t:note?t+' ('+(note.title||'Be pavadinimo')+')':t});
+ }
+ if(cur)editor.querySelectorAll('.ncard').forEach(function(el,i){add(el,i,null);});
+ data.notes.forEach(function(n){
+  if(n===cur||!n.html||n.html.indexOf('data-card')<0)return;
+  var tp=document.createElement('template');tp.innerHTML=n.html;   // template – paveikslėliai neįkeliami
+  tp.content.querySelectorAll('.ncard').forEach(function(el,i){add(el,i,n);});
  });
+ // pirma – atidaryto užrašo kortelės
+ Object.keys(m).forEach(function(k){m[k].sort(function(a,b){return (a.note?1:0)-(b.note?1:0);});});
  return m;
+}
+// Parodo kortelę: atidaryto užrašo – iškart, kito – atidarius tą užrašą
+function calOpenCard(x){
+ if(x.note){openNote(x.note);setView('note');var el=editor.querySelectorAll('.ncard')[x.i];if(el)setTimeout(function(){flashCard(el);},50);}
+ else{setCalMode(false);flashCard(x.el);}
 }
 function dayBg(list){
  var cs=[];list.forEach(function(x){if(cs.indexOf(x.c)<0)cs.push(x.c);});
@@ -2437,7 +2532,7 @@ async function calClick(e){
  if(b.dataset.y){calYear+=+b.dataset.y;renderCal();return;}
  if(b.dataset.v){
   var now=Date.now(),dbl=calSel===b.dataset.v&&now-calTapT<450;calTapT=now;
-  if(dbl){var lk=calCards()[calSel];if(lk){calTapT=0;setCalMode(false);flashCard(lk[0].el);}return;}   // du kartus paspaudus – atidaroma kortelė
+  if(dbl){var lk=calCards()[calSel];if(lk){calTapT=0;calOpenCard(lk[0]);}return;}   // du kartus paspaudus – atidaroma kortelė
   $('calView').querySelectorAll('.calD button.s').forEach(function(x){x.classList.remove('s');});
   calSel=b.dataset.v;$('calView').querySelectorAll('.calD button[data-v="'+calSel+'"]').forEach(function(x){x.classList.add('s');});
   calInfo();return;
