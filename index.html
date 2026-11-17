@@ -31,6 +31,10 @@ button.icon{border:none;padding:8px 10px;min-width:42px;font-size:17px}
 #cardDlg .box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;width:100%;max-width:460px;max-height:94vh;overflow:auto;display:flex;flex-direction:column;gap:10px}
 #cardDlg h3{margin:0;font-size:18px}
 #cardDlg label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);min-width:0}
+#cardDlg .cdPriceW{display:flex;align-items:flex-end;gap:8px;min-width:0}
+#cardDlg .cdPriceW>label:first-child{flex:1}
+#cardDlg label.cdPer{flex-direction:row;align-items:center;gap:5px;flex:none;font-size:14px;color:var(--text);padding-bottom:11px;cursor:pointer;white-space:nowrap}
+#cardDlg label.cdPer input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
 #cardDlg small{font-size:11px}
 #cardDlg input,#cardDlg select,#cardDlg textarea{font:inherit;font-size:15px;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 10px;width:100%}
 #cardDlg textarea{resize:vertical;min-height:110px;line-height:1.4}
@@ -587,7 +591,7 @@ body.calOn:not(.wide) #calYvBtn{display:inline-flex}
   </div>
   <div class="cd2">
    <label class="cdDateL">Data<input id="cdDate" type="text" readonly placeholder="Pasirinkite datą" autocomplete="off"><div id="calPop" class="hidden"></div></label>
-   <label>Kaina<input id="cdPrice" autocomplete="off" placeholder="pvz. €135"></label>
+   <div class="cdPriceW"><label>Kaina<input id="cdPrice" autocomplete="off" placeholder="pvz. €135"></label><label class="cdPer"><input type="checkbox" id="cdPer"> žmogui</label></div>
   </div>
   <label>Vieta <small>(koordinatės arba adresas)</small><input id="cdLoc" autocomplete="off" spellcheck="false" placeholder="27.2567961,-9.7808637"></label>
   <div class="cdc"><span>Kortelės spalva</span><div class="csw" id="cdBg"></div></div>
@@ -755,7 +759,7 @@ body.calOn:not(.wide) #calYvBtn{display:inline-flex}
 var TEMPLATE='<!doctype html>\n'+document.documentElement.outerHTML;
 var OPEN='<'+'script id="store" type="application/json">';
 var CLOSE='</'+'script>';
-var VERSION='156';
+var VERSION='157';
 var ITER=310000;
 var PW_MASK=!matchMedia('(pointer:coarse)').matches;   // kompiuteryje slaptažodis vedamas į savą laukelį (ne <input>) – naršyklės jo nesiūlo išsaugoti
 var enc=new TextEncoder(),dec=new TextDecoder();
@@ -1339,7 +1343,7 @@ function parseCoords(v){
  if(a.h==='E'||a.h==='W'||b.h==='N'||b.h==='S'){var x=a;a=b;b=x;}   // jei pirma ilguma – sukeičiam
  return ok(val(a),val(b));
 }
-document.addEventListener('change',function(e){if(!e.target)return;if(e.target.id==='cdLoc')e.target.value=fmtCoords(e.target.value);else if(e.target.id==='cdPrice')e.target.value=fmtPrice(e.target.value);});
+document.addEventListener('change',function(e){if(!e.target)return;if(e.target.id==='cdLoc')e.target.value=fmtCoords(e.target.value);else if(e.target.id==='cdPrice'){var pv=e.target.value;if(PER_RE.test(pv)){$('cdPer').checked=true;pv=pv.replace(PER_RE,'');}e.target.value=fmtPrice(pv);}});
 // redaktoriaus turinio plotis (be vidinių tarpų šešėliams)
 function edW(){var cs=getComputedStyle(editor);return editor.clientWidth-(parseFloat(cs.paddingLeft)||0)-(parseFloat(cs.paddingRight)||0);}
 function mapsUrl(loc){return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(loc.trim());}
@@ -1375,8 +1379,11 @@ function cleanDesc(html){
 }
 // Kaina: „109“ → „109,00 €“; tekstas be valiutos → pridedamas „ €“; su valiuta – nekeičiama
 // Kaina visada: €135 (€ priekyje, be tarpo); centai – tik jei ne nuliai: €109,50
+var PER_RE=/\s*(\/\s*)?(už\s+)?(žmogui|zmogui|žm\.?|zm\.?|asmeniui|asm\.?)\s*$/i;   // „56 žmogui“, „€56/žm.“, „56 už asmenį“…
 function fmtPrice(v){
- var s=String(v||'').trim();if(!s)return '';
+ var s0=String(v||'').trim();if(!s0)return '';
+ if(PER_RE.test(s0)){var b0=fmtPrice(s0.replace(PER_RE,''));return b0?b0+' / žmogui':'';}   // kaina žmogui – „€56 / žmogui“
+ var s=s0;
  var t=s.replace(/€|\b(eur|euro|eurai|eurų)\b/gi,'').replace(/\s/g,'');
  if(/^\d+([.,]\d{1,2})?$/.test(t)||/^\d{1,3}([.\s]\d{3})+([,]\d{1,2})?$/.test(t)){
   var n=parseFloat(/,\d{1,2}$/.test(t)?t.replace(/\./g,'').replace(',','.'):t.replace(/,/g,''));
@@ -1520,7 +1527,7 @@ function cardDialog(d,isEdit){
   var box=$('cardDlg');
   $('cdT').textContent=isEdit?'Redaguoti kortelę':'Nauja kortelė';
   $('cdType').value=cardType(d.type)[0];updTypeBtn();$('cdTypeGrid').classList.add('hidden');$('cdTitle').value=d.title||'';$('cdIdx').value=d.idx||'';$('cdDate').value=d.date||'';
-  $('cdLoc').value=d.loc||'';$('cdPrice').value=d.price||'';$('cdDesc').innerHTML=cardDescHTML(d);
+  $('cdLoc').value=d.loc||'';var pp=d.price||'',per=/ \/ žmogui$/.test(pp);$('cdPrice').value=per?pp.replace(/ \/ žmogui$/,''):pp;$('cdPer').checked=per;$('cdDesc').innerHTML=cardDescHTML(d);
   setSwatch($('cdBg'),d.bg||'');setSwatch($('cdDot'),d.dot||'#e03131');
   $('cdTl').checked=d.tl!==false;
   $('cdTl').onchange=function(){$('cdDotRow').classList.toggle('off',!this.checked);};$('cdTl').onchange();
@@ -1533,7 +1540,7 @@ function cardDialog(d,isEdit){
   $('cdDel').onclick=function(){done({act:'del'});};
   $('cdOk').onclick=function(){
    done({act:'save',data:{type:$('cdType').value,title:$('cdTitle').value.trim(),idx:$('cdIdx').value.trim(),date:$('cdDate').value,
-    loc:fmtCoords($('cdLoc').value),price:fmtPrice($('cdPrice').value),
+    loc:fmtCoords($('cdLoc').value),price:fmtPrice($('cdPrice').value+($('cdPer').checked&&$('cdPrice').value.trim()?' žmogui':'')),
     dh:cleanDesc($('cdDesc').innerHTML),desc:($('cdDesc').innerText||'').replace(/\s+$/,''),
     bg:getSwatch($('cdBg')),dot:getSwatch($('cdDot')),tl:$('cdTl').checked,imgs:cdPhotos.slice()}});
   };
