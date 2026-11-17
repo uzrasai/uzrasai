@@ -547,7 +547,7 @@ body.calOn:not(.wide) #calYvBtn{display:inline-flex}
 #calYvBtn .i1{display:none}   /* spalva nekinta – keičiasi ikona: mėnesyje 4 kvadratai, metuose didelis kvadratas */
 #calYvBtn.on .i4{display:none}
 #calYvBtn.on .i1{display:block}
-@media (max-width:760px){#calView .calInfo,#calView .calInfo:empty{text-align:left;line-height:1.15;min-height:1.15em}}   /* be tuščios vietos virš teksto – metai matomai per vidurį */
+@media (max-width:760px){#calView .calInfo,#calView .calInfo:empty{text-align:left;line-height:1.15;min-height:1.15em;white-space:normal;overflow:visible;text-overflow:clip}}   /* telefone – netelpantis tekstas į antrą eilutę */   /* be tuščios vietos virš teksto – metai matomai per vidurį */
 
 /* užrašų tempimas */
 #notes li{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
@@ -764,7 +764,7 @@ body.ndrag,body.ndrag *{cursor:grabbing!important}
 var TEMPLATE='<!doctype html>\n'+document.documentElement.outerHTML;
 var OPEN='<'+'script id="store" type="application/json">';
 var CLOSE='</'+'script>';
-var VERSION='159';
+var VERSION='160';
 var ITER=310000;
 var PW_MASK=!matchMedia('(pointer:coarse)').matches;   // kompiuteryje slaptažodis vedamas į savą laukelį (ne <input>) – naršyklės jo nesiūlo išsaugoti
 var enc=new TextEncoder(),dec=new TextDecoder();
@@ -2408,7 +2408,8 @@ function calCards(){
  function add(el,i,note){
   var d=cardData(el);if(!/^\d{4}-\d\d-\d\d$/.test(d.date||''))return;
   var t=(d.idx?d.idx+' ':'')+(d.title||cardType(d.type)[1]);
-  (m[d.date]=m[d.date]||[]).push({el:note?null:el,note:note,i:i,c:cardColor(d),t:note?t+' ('+(note.title||'Be pavadinimo')+')':t});
+  var nt=note?note.title:(titleIn.value||(cur&&cur.title));   // užrašo pavadinimas – visada, ir aktyvaus
+  (m[d.date]=m[d.date]||[]).push({el:note?null:el,note:note,i:i,c:cardColor(d),t:t+' ('+(nt||'Be pavadinimo')+')'});
  }
  if(cur)editor.querySelectorAll('.ncard').forEach(function(el,i){add(el,i,null);});
  data.notes.forEach(function(n){
